@@ -11,7 +11,7 @@ import { Style, Icon } from "ol/style"
 import { fromLonLat, toLonLat } from "ol/proj"
 import "ol/ol.css"
 
-export default function MapComponent() {
+export default function MapComponent({ setWeather }) {
     const mapRef = useRef()
     const vectorSourceRef = useRef(new VectorSource())
 
@@ -35,11 +35,9 @@ export default function MapComponent() {
         })
 
         // Обработчик клика на карте
-        map.on("click", (event) => {
+        map.on("click", async (event) => {
             const coordinates = event.coordinate
-            const lonlat = toLonLat(coordinates)
-
-            console.log("Координаты:", lonlat)
+            const lonLat = toLonLat(coordinates)
 
             // Очистка старого маркера
             vectorSourceRef.current.clear()
@@ -58,15 +56,24 @@ export default function MapComponent() {
             )
 
             vectorSourceRef.current.addFeature(marker)
+
+            // Запрос к OpenWeather
+            const key = import.meta.env.VITE_OPEN_WEATHER_API_KEY
+            const response = await fetch(
+                `https://api.openweathermap.org/data/2.5/weather?lat=${lonLat[1]}&lon=${lonLat[0]}&lang=ru&units=metric&appid=${key}`
+            )
+
+            const data = await response.json()
+            setWeather(data)
         })
 
         return () => map.setTarget(null)
-    }, [])
+    }, [setWeather])
 
     return (
         <div
-        ref={mapRef}
-        style={{ height: '100vh', width: '100%' }}
+            ref={mapRef}
+            style={{ height: "100vh", width: "100%"}}
         />
     )
 }
