@@ -10,7 +10,7 @@ function App() {
     <div style={{display: "flex", height: "100vh"}}>
 
       {/* Левая панель*/}
-      <Sidebar weather={weather} setLocation={setLocation}/>
+      <Sidebar weather={weather} setLocation={setLocation} location={location}/>
 
       {/* Карта */}
       <MapComponent setWeather={setWeather} location={location}/>

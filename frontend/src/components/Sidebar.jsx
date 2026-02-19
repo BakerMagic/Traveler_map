@@ -1,7 +1,8 @@
+import Events from "./Events";
 import Search from "./Search";
 import WeatherPanel from "./WeatherPanel";
 
-export default function Sidebar({ weather, setLocation }) {
+export default function Sidebar({ weather, setLocation, location }) {
     return (
         <div style={{
             width: "300px",
@@ -11,6 +12,7 @@ export default function Sidebar({ weather, setLocation }) {
           }}>
             <Search setLocation={setLocation} />
             <WeatherPanel weather={weather} />
+            <Events location={location}/>
           </div>
     )
 }
