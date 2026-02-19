@@ -11,10 +11,11 @@ import { Style, Icon } from "ol/style"
 import { fromLonLat, toLonLat } from "ol/proj"
 import "ol/ol.css"
 
-export default function MapComponent({ setWeather }) {
+export default function MapComponent({ setWeather, location }) {
     const mapRef = useRef()
     const vectorSourceRef = useRef(new VectorSource())
 
+    // Карта и погода
     useEffect(() => {
         const vectorLayer = new VectorLayer({
             source: vectorSourceRef.current
@@ -33,6 +34,8 @@ export default function MapComponent({ setWeather }) {
                 zoom: 2
             })
         })
+
+        mapRef.current = map
 
         // Обработчик клика на карте
         map.on("click", async (event) => {
@@ -69,6 +72,21 @@ export default function MapComponent({ setWeather }) {
 
         return () => map.setTarget(null)
     }, [setWeather])
+
+    // Поиск
+    useEffect(() => {
+        console.log("location:", location)
+
+        if (!location || !mapRef.current) return
+
+        const coords = fromLonLat([location.lon, location.lat])
+
+        mapRef.current.getView().animate({
+            center: coords,
+            zoom: 17,
+            duration: 1000
+        })
+    }, [location])
 
     return (
         <div
