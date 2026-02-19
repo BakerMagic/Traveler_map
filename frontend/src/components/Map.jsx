@@ -10,6 +10,7 @@ import Point from "ol/geom/Point"
 import { Style, Icon } from "ol/style"
 import { fromLonLat, toLonLat } from "ol/proj"
 import "ol/ol.css"
+import { getZoomByLocation } from '../utils/zoomMap'
 
 export default function MapComponent({ setWeather, location }) {
     const mapRef = useRef()
@@ -80,10 +81,11 @@ export default function MapComponent({ setWeather, location }) {
         if (!location || !mapRef.current) return
 
         const coords = fromLonLat([location.lon, location.lat])
+        const zoom = getZoomByLocation(location)
 
         mapRef.current.getView().animate({
             center: coords,
-            zoom: 17,
+            zoom: zoom,
             duration: 1000
         })
     }, [location])
