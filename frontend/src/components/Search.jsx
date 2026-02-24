@@ -13,8 +13,6 @@ export default function Search({ setLocation }) {
             addresstype: item.addresstype,
             display_name: item.display_name
         })
-
-        // setResults([])
     }
 
     const handleSearch = async () => {

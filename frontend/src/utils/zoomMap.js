@@ -20,6 +20,7 @@ export const ZOOM_MAP = {
     'place': 15,
     'shop': 18,
     'amenity': 18,
+    'tourism': 18,
 
     // Природные объекты
     'peak': 14,

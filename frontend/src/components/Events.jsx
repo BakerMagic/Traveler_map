@@ -1,9 +1,17 @@
 import { useState, useEffect } from "react"
 
-export default function Events({ location }) {
+export default function Events({ location, setLocation }) {
     const [events, setEvents] = useState([])
     const [eventsLoading, setEventsLoading] = useState(false)
     const [eventsError, setEventsError] = useState(null)
+
+    const handlePick = (lat, lon) => {
+        setLocation({
+            lon: Number(lon),
+            lat: Number(lat),
+            type: "tourism",
+        })
+    }
 
     useEffect(() => {
         if (!location) {
@@ -18,36 +26,17 @@ export default function Events({ location }) {
                 setEventsLoading(true)
                 setEventsError(null)
 
-                const key = import.meta.env.VITE_TICKETMASTER_API_KEY
-                if (!key) {
-                    setEventsError("Ticketmaster API key не задан")
-                    setEvents([])
-                    return
-                }
-
-                const lat = location.lat
-                const lon = location.lon
-
                 // Поиск событий вокруг выбранной точки (Глобально)
                 const response = await fetch(
-                    `https://app.ticketmaster.com/discovery/v2/events.json?apikey=${key}&latlong=${lat},${lon}&radius=50&unit=km&size=20&sort=date,asc`
+                    `http://localhost:4000/api/events?lat=${location.lat}&lon=${location.lon}`
                 )
                 if (!response.ok) {
                     throw new Error(`HTTP ${response.status}`)
                 }
 
-                const normalized = rawEvents.map((event) => ({
-                    id: event.id,
-                    name: event.name,
-                    url: event.url,
-                    date: event.dates?.start?.localDate || event.dates?.start?.dateTime || "",
-                    time: event.dates?.start?.localTime || "",
-                    venueName: event._embedded?.venues?.[0]?.name || "",
-                    city: event._embedded?.venues?.[0]?.city?.name || "",
-                    country: event._embedded?.venues?.[0]?.country?.name || "",
-                }))
+                const data = await response.json()
 
-                setEvents(normalized)
+                setEvents(data.events || [])
             } catch (error) {
                 console.error("TicketMaster events error:", error)
                 setEventsError("Не удалось загрузить события")
@@ -80,9 +69,8 @@ export default function Events({ location }) {
             {!eventsLoading && !eventsError && events && events.length > 0 && 
                 <div>
                     {events.map((event) => (
-                        <button 
+                        <div
                             key={event.id}
-                            onClick={() => event.url && window.open(event.url, "_blank")}
                             style={{
                                 display: "block",
                                 width: "100%",
@@ -91,18 +79,51 @@ export default function Events({ location }) {
                                 padding: 8,
                                 border: "1px solid #ddd",
                                 borderRadius: 4,
-                                cursor: event.url ? "pointer" : "default"
                             }}>
-                                <div style={{ fontWeight: "bold" }}>
-                                    {event.name}
-                                </div>
-                                <div style={{ fontSize: 12, color: "#555" }}>
-                                    {event.date} {event.time && `в ${event.time}`}
-                                </div>
-                                <div style={{ fontSize: 12, color: "#777" }}>
-                                    {event.venueName && `${event.venueName}, `}{event.city}{event.country && `, ${event.country}`}
-                                </div>
-                        </button>
+                                <button
+                                    type="button"
+                                    onClick={() => handlePick(event.lat, event.lon)}
+                                    style={{
+                                        display: "block",
+                                        width: "100%",
+                                        textAlign: "left",
+                                        padding: 0,
+                                        border: "none",
+                                        background: "transparent",
+                                        cursor: "pointer"
+                                    }}
+                                >
+                                    <div style={{ fontWeight: "bold" }}>
+                                        {event.name}
+                                    </div>
+                                    <div style={{ fontSize: 12, color: "#555" }}>
+                                        {event.date} {event.time && `в ${event.time}`}
+                                    </div>
+                                    <div style={{ fontSize: 12, color: "#777" }}>
+                                        {event.venueName && `${event.venueName}, `}
+                                        {event.address && `${event.address}, `}
+                                        {event.city}
+                                        {event.country && `, ${event.country}`}
+                                    </div>
+                                </button>
+                                {event.url && (
+                                    <a 
+                                        href={event.url}
+                                        onMouseEnter={(e) => (e.currentTarget.style.color = "#777")}
+                                        onMouseLeave={(e) => (e.currentTarget.style.color = "#555")}
+                                        style={{
+                                            fontSize: 12,
+                                            color: "#555",
+                                            display: "inline-block",
+                                            marginTop: 6,
+                                        }}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                    >
+                                        Посетить сайт...
+                                    </a>
+                                )}
+                        </div>
                     ))}
                 </div>
             }
