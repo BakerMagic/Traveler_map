@@ -7,12 +7,13 @@ import VectorLayer from "ol/layer/Vector"
 import VectorSource from "ol/source/Vector"
 import Feature from "ol/Feature"
 import Point from "ol/geom/Point"
-import { Style, Icon } from "ol/style"
+import { Style, Icon, Stroke } from "ol/style"
 import { fromLonLat, toLonLat } from "ol/proj"
 import "ol/ol.css"
 import { getZoomByLocation } from '../utils/zoomMap'
+import { LineString } from "ol/geom"
 
-export default function MapComponent({ setWeather, location }) {
+export default function MapComponent({ setWeather, location, routePoints, routeGeometry }) {
     const mapRef = useRef()
     const vectorSourceRef = useRef(new VectorSource())
 
@@ -46,6 +47,14 @@ export default function MapComponent({ setWeather, location }) {
             // Очистка старого маркера
             vectorSourceRef.current.clear()
 
+            const svg = `
+                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="90">
+                    <circle cx="20" cy="20" r="15" fill="red"/>
+                    <path d="M 10 31 Q 18 37 20 45 Q 22 37 30 31" fill="red"/>
+                    <circle cx="20" cy="20" r="6" fill="white"/>              
+                </svg>
+            `
+
             const marker = new Feature({
                 geometry: new Point(coordinates)
             })
@@ -53,8 +62,8 @@ export default function MapComponent({ setWeather, location }) {
             marker.setStyle(
                 new Style({
                     image: new Icon({
-                        src: "https://cdn-icons-png.flaticon.com/512/684/684908.png",
-                        scale: 0.05
+                        src: "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg),
+                        scale: 1
                     })
                 })
             )
@@ -90,10 +99,77 @@ export default function MapComponent({ setWeather, location }) {
         })
     }, [location])
 
+    // Построение маршрута (точки)
+    useEffect(() => {
+        if (!mapRef) return
+
+        vectorSourceRef.current.clear()
+
+        routePoints.forEach((point, index) => {
+            if (!point.lat || !point.lon) return
+
+            const marker = new Feature({
+                geometry: new Point(fromLonLat([point.lon, point.lat]))
+            })
+
+            marker.setStyle(
+                new Style({
+                    image: new Icon({
+                        src: generateNumberedSVG(index + 1),
+                        scale: 1
+                    })
+                })
+            )
+
+            vectorSourceRef.current.addFeature(marker)
+        })
+    }, [routePoints])
+
+    // Построение маршрута (путь)
+    useEffect(() => {
+        if (!mapRef.current || !routeGeometry || routeGeometry.length === 0) return
+
+        // удаление старых линий маршрута
+        const features = vectorSourceRef.current.getFeatures()
+        features
+            .filter(f => f.get("isRoute"))
+            .forEach(f => vectorSourceRef.current.removeFeature(f))
+
+        const projected = routeGeometry.map(p => fromLonLat([p.lon, p.lat]))
+        const line = new LineString(projected)
+
+        const routeFeature = new Feature({ geometry: line })
+        routeFeature.set("isRoute", true)
+
+        routeFeature.setStyle(
+            new Style({
+                stroke: new Stroke({
+                    color: "#1976d2",
+                    width: 4
+                })
+            })
+        )
+
+        vectorSourceRef.current.addFeature(routeFeature)
+    }, [routeGeometry])
+
     return (
         <div
             ref={mapRef}
             style={{ height: "100vh", width: "100%"}}
         />
     )
+}
+
+function generateNumberedSVG(number) {
+    const svg = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="90">
+            <circle cx="20" cy="20" r="15" fill="#ff5722"/>
+            <path d="M 10 31 Q 18 37 20 45 Q 22 37 30 31" fill="#ff5722"/>
+            <circle cx="20" cy="20" r="7" fill="white"/>              
+            <text x="20" y="25" text-anchor="middle" font-size="12" fill="black">${number}</text>
+        </svg>
+    `
+
+    return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg)
 }
