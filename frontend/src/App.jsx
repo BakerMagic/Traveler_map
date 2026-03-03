@@ -4,6 +4,7 @@ import Sidebar from './components/Sidebar'
 
 function App() {
   const [weather, setWeather] = useState(null)
+  const [forecast, setForecast] = useState(null)
   const [location, setLocation] = useState(null)
   const [routePoints, setRoutePoints] = useState([])
   const [routeGeometry, setRouteGeometry] = useState(null)
@@ -14,6 +15,7 @@ function App() {
       {/* Левая панель*/}
       <Sidebar 
         weather={weather}
+        forecast={forecast}
         setLocation={setLocation}
         location={location}
         routePoints={routePoints}
@@ -24,6 +26,7 @@ function App() {
       {/* Карта */}
       <MapComponent
         setWeather={setWeather}
+        setForecast={setForecast}
         location={location}
         routePoints={routePoints}
         routeGeometry={routeGeometry}

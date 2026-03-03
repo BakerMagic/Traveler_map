@@ -4,7 +4,8 @@ import WeatherPanel from "./WeatherPanel"
 import RouteBuilder from "./RouteBuilder"
 
 export default function Sidebar({ 
-  weather, 
+  weather,
+  forecast,
   setLocation, 
   location, 
   routePoints, 
@@ -33,7 +34,7 @@ export default function Sidebar({
             </svg>
           </div> */}
 
-          <WeatherPanel weather={weather} />
+          <WeatherPanel weather={weather} forecast={forecast} />
           <Events location={location} setLocation={setLocation}/>
       </div>
   )

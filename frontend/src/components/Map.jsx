@@ -13,7 +13,7 @@ import "ol/ol.css"
 import { getZoomByLocation } from '../utils/zoomMap'
 import { LineString } from "ol/geom"
 
-export default function MapComponent({ setWeather, location, routePoints, routeGeometry }) {
+export default function MapComponent({ setWeather, setForecast, location, routePoints, routeGeometry }) {
     const mapRef = useRef()
     const vectorSourceRef = useRef(new VectorSource())
 
@@ -42,7 +42,7 @@ export default function MapComponent({ setWeather, location, routePoints, routeG
         // Обработчик клика на карте
         map.on("click", async (event) => {
             const coordinates = event.coordinate
-            const lonLat = toLonLat(coordinates)
+            const lonlat = toLonLat(coordinates)
 
             // Очистка старого маркера
             vectorSourceRef.current.clear()
@@ -71,13 +71,28 @@ export default function MapComponent({ setWeather, location, routePoints, routeG
             vectorSourceRef.current.addFeature(marker)
 
             // Запрос к OpenWeather
-            const key = import.meta.env.VITE_OPEN_WEATHER_API_KEY
-            const response = await fetch(
-                `https://api.openweathermap.org/data/2.5/weather?lat=${lonLat[1]}&lon=${lonLat[0]}&lang=ru&units=metric&appid=${key}`
-            )
+            try {
+                const [currentResponse, forecastResponse] = await Promise.all([
+                    fetch(`http://localhost:4000/api/weather/current?lat=${lonlat[1]}&lon=${lonlat[0]}`),
+                    fetch(`http://localhost:4000/api/weather/forecast?lat=${lonlat[1]}&lon=${lonlat[0]}`)
+                ])
 
-            const data = await response.json()
-            setWeather(data)
+                if (currentResponse.ok) {
+                    const { weather } = await currentResponse.json()
+                    setWeather(weather)
+                } else {
+                    console.error("Current weather error", currentResponse.status)
+                }
+
+                if (forecastResponse.ok) {
+                    const { forecast } = await forecastResponse.json()
+                    setForecast(forecast)
+                } else {
+                    console.error("Forecast error", forecastResponse.status)
+                }
+            } catch (error) {
+                console.error("Weather fetch error", error)
+            }
         })
 
         return () => map.setTarget(null)

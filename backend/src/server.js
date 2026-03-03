@@ -3,6 +3,7 @@ import cors from "cors"
 import dotenv from "dotenv"
 import eventsRouter from "./routes/events.js"
 import routeRouter from "./routes/route.js"
+import weatherRouter from "./routes/weather.js"
 
 dotenv.config()
 
@@ -18,6 +19,7 @@ app.use(express.json())
 
 app.use("/api/events", eventsRouter)
 app.use("/api/route", routeRouter)
+app.use("/api/weather", weatherRouter)
 
 app.get("/api/health", (req, res) => {
     res.json({ status: "ok" })
