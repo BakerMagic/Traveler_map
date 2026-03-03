@@ -28,6 +28,7 @@ function App() {
         setWeather={setWeather}
         setForecast={setForecast}
         location={location}
+        setLocation={setLocation}
         routePoints={routePoints}
         routeGeometry={routeGeometry}
       />

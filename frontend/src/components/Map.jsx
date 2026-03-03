@@ -14,12 +14,19 @@ import { getZoomByLocation } from '../utils/zoomMap'
 import { LineString } from "ol/geom"
 import GeoJSON from "ol/format/GeoJSON"
 
-export default function MapComponent({ setWeather, setForecast, location, routePoints, routeGeometry }) {
+export default function MapComponent({
+    setWeather,
+    setForecast,
+    location,
+    setLocation,
+    routePoints,
+    routeGeometry
+}) {
     const mapRef = useRef()
     const vectorSourceRef = useRef(new VectorSource())
 
-    // Карта и погода
-    useEffect(() => {
+    useEffect(() => { // Карта и погода
+        console.log("1")
         const vectorLayer = new VectorLayer({
             source: vectorSourceRef.current
         })
@@ -40,70 +47,89 @@ export default function MapComponent({ setWeather, setForecast, location, routeP
 
         mapRef.current = map
 
-        // Обработчик клика на карте
-        map.on("click", async (event) => {
+        map.on("click", async (event) => { // Обработчик клика на карте
+            const features = vectorSourceRef.current.getFeatures()
+
+            // Приверка клика по маркеру маршрута
+            const featureAtPixel = map.forEachFeatureAtPixel(event.pixel, (f) => f)
+            const routePointData = featureAtPixel && featureAtPixel.get("routePoint")
+            
+            if (routePointData) {
+                const { lat, lon, index } = routePointData
+
+                setLocation({
+                    lat,
+                    lon,
+                    type: "routePoint"
+                })
+
+                getWeather(lat, lon, setWeather, setForecast)
+
+                features
+                    .filter(f => f.get("routePoint"))
+                    .forEach(f => {
+                        const routePoint = f.get("routePoint")
+                        const isSelected = routePoint.index === index
+
+                        f.setStyle(
+                            new Style({
+                                image: new Icon({
+                                    src: generateNumberedMarkerSVG(routePoint.index + 1),
+                                    scale: isSelected ? 1.5 : 1
+                                })
+                            })
+                        )
+                    })
+
+                return
+            }
+
+            features
+                .filter(f => f.get("routePoint"))
+                .forEach(f => {
+                    const rp = f.get("routePoint")
+                    f.setStyle(
+                        new Style({
+                            image: new Icon({
+                                src: generateNumberedMarkerSVG(rp.index + 1),
+                                scale: 1,
+                            }),
+                        })
+                    )
+                })
+
             const coordinates = event.coordinate
             const lonlat = toLonLat(coordinates)
 
             // Очистка старого маркера
-            vectorSourceRef.current.clear()
+            features
+                .filter(f => f.get("isSearchPolygon") || f.get("type") === "searchMarker")
+                .forEach(f => vectorSourceRef.current.removeFeature(f))
 
-            const marker = new Feature({
-                geometry: new Point(coordinates)
-            })
-
-            marker.setStyle(
-                new Style({
-                    image: new Icon({
-                        src: generateDefaultMarkerSVG(),
-                        scale: 1
-                    })
-                })
-            )
+            const marker = setDefaultMarkerSVG(lonlat[1], lonlat[0])
 
             vectorSourceRef.current.addFeature(marker)
 
             // Запрос к OpenWeather
-            try {
-                const [currentResponse, forecastResponse] = await Promise.all([
-                    fetch(`http://localhost:4000/api/weather/current?lat=${lonlat[1]}&lon=${lonlat[0]}`),
-                    fetch(`http://localhost:4000/api/weather/forecast?lat=${lonlat[1]}&lon=${lonlat[0]}`)
-                ])
-
-                if (currentResponse.ok) {
-                    const { weather } = await currentResponse.json()
-                    setWeather(weather)
-                } else {
-                    console.error("Current weather error", currentResponse.status)
-                }
-
-                if (forecastResponse.ok) {
-                    const { forecast } = await forecastResponse.json()
-                    setForecast(forecast)
-                } else {
-                    console.error("Forecast error", forecastResponse.status)
-                }
-            } catch (error) {
-                console.error("Weather fetch error", error)
-            }
+            getWeather(lonlat[1], lonlat[0], setWeather, setForecast)
         })
 
         return () => map.setTarget(null)
     }, [setWeather])
 
-    // Поиск
-    useEffect(() => {
-        if (!location || !mapRef.current) return
+    useEffect(() => { // Поиск
+        if (!location || !mapRef.current || location.type === "routePoint") return
 
-        vectorSourceRef.current.clear()
-
+        const features = vectorSourceRef.current.getFeatures()
+        features
+            .filter(f => f.get("isSearchPolygon") || f.get("type") === "searchMarker")
+            .forEach(f => vectorSourceRef.current.removeFeature(f))
+        
         // features
-        //     .filter(f => f.get("isSearchPolygon"))
+        //     .filter(f => )
         //     .forEach(f => vectorSourceRef.current.removeFeature(f))
         
         if (location.polygon) {
-            const features = vectorSourceRef.current.getFeatures()
-
             const format = new GeoJSON()
     
             const feature = format.readFeature(
@@ -135,18 +161,7 @@ export default function MapComponent({ setWeather, setForecast, location, routeP
             vectorSourceRef.current.addFeature(feature)
         }
 
-        const marker = new Feature({
-            geometry: new Point(fromLonLat([location.lon, location.lat]))
-        })
-
-        marker.setStyle(
-            new Style({
-                image: new Icon({
-                    src: generateDefaultMarkerSVG(),
-                    scale: 1
-                })
-            })
-        )
+        const marker = setDefaultMarkerSVG(location.lat, location.lon)
 
         vectorSourceRef.current.addFeature(marker)
 
@@ -160,10 +175,10 @@ export default function MapComponent({ setWeather, setForecast, location, routeP
         })
     }, [location])
 
-    // Построение маршрута (точки)
-    useEffect(() => {
+    useEffect(() => { // Построение маршрута (точки)
         if (!mapRef) return
 
+        // Очищаем всё для удобного построения маршрута
         vectorSourceRef.current.clear()
 
         routePoints.forEach((point, index) => {
@@ -171,6 +186,12 @@ export default function MapComponent({ setWeather, setForecast, location, routeP
 
             const marker = new Feature({
                 geometry: new Point(fromLonLat([point.lon, point.lat]))
+            })
+
+            marker.set("routePoint", {
+                lat: point.lat,
+                lon: point.lon,
+                index
             })
 
             marker.setStyle(
@@ -186,8 +207,7 @@ export default function MapComponent({ setWeather, setForecast, location, routeP
         })
     }, [routePoints])
 
-    // Построение маршрута (путь)
-    useEffect(() => {
+    useEffect(() => { // Построение маршрута (путь)
         if (!mapRef.current || !routeGeometry || routeGeometry.length === 0) return
 
         // удаление старых линий маршрута
@@ -235,7 +255,7 @@ function generateNumberedMarkerSVG(number) {
     return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg)
 }
 
-function generateDefaultMarkerSVG() {
+function setDefaultMarkerSVG(lat, lon) {
     const svg = `
         <svg xmlns="http://www.w3.org/2000/svg" width="40" height="90">
             <circle cx="20" cy="20" r="15" fill="red"/>
@@ -244,5 +264,45 @@ function generateDefaultMarkerSVG() {
         </svg>
     `
 
-    return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg)
+    const marker = new Feature({
+        geometry: new Point(fromLonLat([lon, lat]))
+    })
+
+    marker.set("type", "searchMarker")
+
+    marker.setStyle(
+        new Style({
+            image: new Icon({
+                src: "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg),
+                scale: 1
+            })
+        })
+    )
+
+    return marker
+}
+
+async function getWeather(lat, lon, setWeather, setForecast) {
+    try {
+        const [currentResponse, forecastResponse] = await Promise.all([
+            fetch(`http://localhost:4000/api/weather/current?lat=${lat}&lon=${lon}`),
+            fetch(`http://localhost:4000/api/weather/forecast?lat=${lat}&lon=${lon}`)
+        ])
+
+        if (currentResponse.ok) {
+            const { weather } = await currentResponse.json()
+            setWeather(weather)
+        } else {
+            console.error("Current weather error", currentResponse.status)
+        }
+
+        if (forecastResponse.ok) {
+            const { forecast } = await forecastResponse.json()
+            setForecast(forecast)
+        } else {
+            console.error("Forecast error", forecastResponse.status)
+        }
+    } catch (error) {
+        console.error("Weather fetch error", error)
+    }
 }
