@@ -11,7 +11,8 @@ export default function Search({ setLocation }) {
             type: item.type,
             class: item.class,
             addresstype: item.addresstype,
-            display_name: item.display_name
+            display_name: item.display_name,
+            polygon: item.geojson || null
         })
     }
 
@@ -19,7 +20,7 @@ export default function Search({ setLocation }) {
         if (!query.trim()) return
 
         const response = await fetch(
-            `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&accept-language="browser language string"&namedetails=1&limit=10`
+            `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&accept-language="browser language string"&namedetails=1&polygon_geojson=1&limit=10`
         )
 
         const geoData = await response.json()

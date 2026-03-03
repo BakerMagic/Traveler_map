@@ -7,11 +7,12 @@ import VectorLayer from "ol/layer/Vector"
 import VectorSource from "ol/source/Vector"
 import Feature from "ol/Feature"
 import Point from "ol/geom/Point"
-import { Style, Icon, Stroke } from "ol/style"
+import { Style, Icon, Stroke, Fill } from "ol/style"
 import { fromLonLat, toLonLat } from "ol/proj"
 import "ol/ol.css"
 import { getZoomByLocation } from '../utils/zoomMap'
 import { LineString } from "ol/geom"
+import GeoJSON from "ol/format/GeoJSON"
 
 export default function MapComponent({ setWeather, setForecast, location, routePoints, routeGeometry }) {
     const mapRef = useRef()
@@ -47,14 +48,6 @@ export default function MapComponent({ setWeather, setForecast, location, routeP
             // Очистка старого маркера
             vectorSourceRef.current.clear()
 
-            const svg = `
-                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="90">
-                    <circle cx="20" cy="20" r="15" fill="red"/>
-                    <path d="M 10 31 Q 18 37 20 45 Q 22 37 30 31" fill="red"/>
-                    <circle cx="20" cy="20" r="6" fill="white"/>              
-                </svg>
-            `
-
             const marker = new Feature({
                 geometry: new Point(coordinates)
             })
@@ -62,7 +55,7 @@ export default function MapComponent({ setWeather, setForecast, location, routeP
             marker.setStyle(
                 new Style({
                     image: new Icon({
-                        src: "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg),
+                        src: generateDefaultMarkerSVG(),
                         scale: 1
                     })
                 })
@@ -100,9 +93,62 @@ export default function MapComponent({ setWeather, setForecast, location, routeP
 
     // Поиск
     useEffect(() => {
-        console.log("location:", location)
-
         if (!location || !mapRef.current) return
+
+        vectorSourceRef.current.clear()
+
+        // features
+        //     .filter(f => f.get("isSearchPolygon"))
+        //     .forEach(f => vectorSourceRef.current.removeFeature(f))
+        
+        if (location.polygon) {
+            const features = vectorSourceRef.current.getFeatures()
+
+            const format = new GeoJSON()
+    
+            const feature = format.readFeature(
+                {
+                    type: "Feature",
+                    geometry: location.polygon,
+                    properties: {}
+                },
+                {
+                    dataProjection: "EPSG:4326",
+                    featureProjection: "EPSG:3857"
+                }
+            )
+    
+            feature.set("isSearchPolygon", true)
+    
+            feature.setStyle(
+                new Style({
+                    stroke: new Stroke({
+                        color: "rgba(25, 118, 210, 0.9)",
+                        width: 2,
+                    }),
+                    fill: new Fill({
+                        color: "rgba(25, 118, 210, 0.15)"
+                    })
+                })
+            )
+    
+            vectorSourceRef.current.addFeature(feature)
+        }
+
+        const marker = new Feature({
+            geometry: new Point(fromLonLat([location.lon, location.lat]))
+        })
+
+        marker.setStyle(
+            new Style({
+                image: new Icon({
+                    src: generateDefaultMarkerSVG(),
+                    scale: 1
+                })
+            })
+        )
+
+        vectorSourceRef.current.addFeature(marker)
 
         const coords = fromLonLat([location.lon, location.lat])
         const zoom = getZoomByLocation(location)
@@ -130,7 +176,7 @@ export default function MapComponent({ setWeather, setForecast, location, routeP
             marker.setStyle(
                 new Style({
                     image: new Icon({
-                        src: generateNumberedSVG(index + 1),
+                        src: generateNumberedMarkerSVG(index + 1),
                         scale: 1
                     })
                 })
@@ -176,13 +222,25 @@ export default function MapComponent({ setWeather, setForecast, location, routeP
     )
 }
 
-function generateNumberedSVG(number) {
+function generateNumberedMarkerSVG(number) {
     const svg = `
         <svg xmlns="http://www.w3.org/2000/svg" width="40" height="90">
             <circle cx="20" cy="20" r="15" fill="#ff5722"/>
             <path d="M 10 31 Q 18 37 20 45 Q 22 37 30 31" fill="#ff5722"/>
             <circle cx="20" cy="20" r="7" fill="white"/>              
             <text x="20" y="25" text-anchor="middle" font-size="12" fill="black">${number}</text>
+        </svg>
+    `
+
+    return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg)
+}
+
+function generateDefaultMarkerSVG() {
+    const svg = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="90">
+            <circle cx="20" cy="20" r="15" fill="red"/>
+            <path d="M 10 31 Q 18 37 20 45 Q 22 37 30 31" fill="red"/>
+            <circle cx="20" cy="20" r="6" fill="white"/>              
         </svg>
     `
 

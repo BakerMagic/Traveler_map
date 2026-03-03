@@ -3,8 +3,8 @@ export const ZOOM_MAP = {
     'country': 5,
 
     // Города и крупные населённые пункты
-    'city': 13,
-    'town': 14,
+    'city': 12,
+    'town': 13,
     'village': 15,
     'hamlet': 16,
 
