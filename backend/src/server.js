@@ -4,6 +4,11 @@ import dotenv from "dotenv"
 import eventsRouter from "./routes/events.js"
 import routeRouter from "./routes/route.js"
 import weatherRouter from "./routes/weather.js"
+import { testDbConnection } from "./db.js";
+
+testDbConnection().catch((error) => {
+    console.error("Failed to connect to DB:", error);
+});
 
 dotenv.config()
 
