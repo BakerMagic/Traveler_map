@@ -5,6 +5,8 @@ import eventsRouter from "./routes/events.js"
 import routeRouter from "./routes/route.js"
 import weatherRouter from "./routes/weather.js"
 import { testDbConnection } from "./db.js";
+import authRouter from "./routes/auth.js";
+import cookieParser from "cookie-parser";
 
 testDbConnection().catch((error) => {
     console.error("Failed to connect to DB:", error);
@@ -17,14 +19,18 @@ const PORT = process.env.PORT || 4000
 
 // Разрешаем запросы с фронта
 app.use(cors({
-    origin: "http://localhost:5173"
+    origin: "http://localhost:5173",
+    credentials: true
 }))
+
+app.use(cookieParser());
 
 app.use(express.json())
 
 app.use("/api/events", eventsRouter)
 app.use("/api/route", routeRouter)
 app.use("/api/weather", weatherRouter)
+app.use("/api/auth", authRouter);
 
 app.get("/api/health", (req, res) => {
     res.json({ status: "ok" })

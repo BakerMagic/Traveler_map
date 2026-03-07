@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import Map from "ol/Map"
 import View from "ol/View"
 import TileLayer from "ol/layer/Tile"
@@ -13,6 +13,9 @@ import "ol/ol.css"
 import { getZoomByLocation } from '../utils/zoomMap'
 import { LineString } from "ol/geom"
 import GeoJSON from "ol/format/GeoJSON"
+import { useAuth } from "../context/AuthContext";
+import AuthModal from "./AuthModal";
+import ProfilePage from "./ProfilePage"
 
 export default function MapComponent({
     setWeather,
@@ -24,6 +27,9 @@ export default function MapComponent({
 }) {
     const mapRef = useRef()
     const vectorSourceRef = useRef(new VectorSource())
+    const { user, isAuthenticated, logout } = useAuth();
+    const [authOpen, setAuthOpen] = useState(false);
+    const [profileOpen, setProfileOpen] = useState(false);
 
     useEffect(() => { // Карта и погода
         console.log("1")
@@ -235,10 +241,79 @@ export default function MapComponent({
     }, [routeGeometry])
 
     return (
-        <div
-            ref={mapRef}
-            style={{ height: "100vh", width: "100%"}}
-        />
+        <div style={{ position: "relative", height: "100vh", width: "100%" }}>
+            <div
+                ref={mapRef}
+                style={{ height: "100%", width: "100%" }}
+            />
+
+            {/* Кнопка профиля */}
+            <div
+                style={{
+                    position: "absolute",
+                    top: 16,
+                    right: 16,
+                    zIndex: 1500,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                }}
+            >
+                {isAuthenticated ? (
+                    <>
+                    <button
+                        onClick={() => setProfileOpen(true)}
+                        style={{
+                        width: 40,
+                        height: 40,
+                        borderRadius: "50%",
+                        border: "none",
+                        background: "#1976d2",
+                        color: "white",
+                        fontWeight: 600,
+                        cursor: "pointer",
+                        }}
+                    >
+                        {user.username?.[0]?.toUpperCase() || "P"}
+                    </button>
+                    <button
+                        onClick={logout}
+                        style={{
+                        padding: "6px 10px",
+                        borderRadius: 999,
+                        border: "none",
+                        background: "#333",
+                        color: "white",
+                        cursor: "pointer",
+                        fontSize: 12,
+                        }}
+                    >
+                        Выйти
+                    </button>
+                    </>
+                ) : (
+                    <button
+                        onClick={() => setAuthOpen(true)}
+                        style={{
+                            padding: "6px 12px",
+                            borderRadius: 999,
+                            border: "none",
+                            background: "rgba(0,0,0,0.6)",
+                            color: "white",
+                            cursor: "pointer",
+                            backdropFilter: "blur(6px)",
+                        }}
+                    >
+                    Войти
+                    </button>
+                )}
+            </div>
+
+            <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} />
+            {profileOpen && (
+            <ProfilePage onClose={() => setProfileOpen(false)} />
+            )}
+        </div>
     )
 }
 
