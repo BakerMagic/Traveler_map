@@ -2,7 +2,7 @@ import express from "express"
 import cors from "cors"
 import dotenv from "dotenv"
 import eventsRouter from "./routes/events.js"
-import routeRouter from "./routes/route.js"
+import routesRouter from "./routes/routes.js"
 import weatherRouter from "./routes/weather.js"
 import { testDbConnection } from "./db.js";
 import authRouter from "./routes/auth.js";
@@ -28,7 +28,7 @@ app.use(cookieParser());
 app.use(express.json())
 
 app.use("/api/events", eventsRouter)
-app.use("/api/route", routeRouter)
+app.use("/api/routes", routesRouter)
 app.use("/api/weather", weatherRouter)
 app.use("/api/auth", authRouter);
 

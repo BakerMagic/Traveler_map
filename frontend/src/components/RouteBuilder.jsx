@@ -1,9 +1,11 @@
 import { useState } from "react"
 import RoutePointInput from "./RoutePointInput"
 import destinationSVG from "../assets/destination.svg"
+import { useAuth } from "../context/AuthContext";
 
 export default function RouteBuilder({ routePoints, setRoutePoints, setRouteGeometry }) {
     const [isRouteBuilderActive, setIsRouteBuilderActive] = useState(false)
+    const { isAuthenticated } = useAuth();
 
     const addPoint = () => {
         setRoutePoints(prev => [
@@ -25,7 +27,7 @@ export default function RouteBuilder({ routePoints, setRoutePoints, setRouteGeom
             return
         }
 
-        const response = await fetch("http://localhost:4000/api/route", {
+        const response = await fetch("http://localhost:4000/api/routes", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ points, profile: "driving-car" })
@@ -41,6 +43,40 @@ export default function RouteBuilder({ routePoints, setRoutePoints, setRouteGeom
 
         setRouteGeometry(data.route.coordinates || [])
     }
+
+    async function handleSave() {
+        if (!isAuthenticated) {
+            alert("Сначала войдите в профиль");
+            return;
+        }
+    
+        if (!routePoints || routePoints.length < 2) {
+            alert("Сначала постройте маршрут (минимум 2 точки)");
+            return;
+        }
+    
+        const name = prompt("Название маршрута:");
+        if (!name) return;
+    
+        const res = await fetch("http://localhost:4000/api/routes/save", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include", // важно для secure cookie
+            body: JSON.stringify({
+                name,
+                points: routePoints,
+            }),
+        });
+    
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+            console.log("data.error:", data.error)
+            alert(data.error || "Не удалось сохранить маршрут");
+            return;
+        }
+    
+        alert("Маршрут сохранён!");
+      }
 
     return (
         <>
@@ -75,6 +111,10 @@ export default function RouteBuilder({ routePoints, setRoutePoints, setRouteGeom
 
                     <button onClick={buildRoute}>
                         Построить
+                    </button>
+
+                    <button onClick={handleSave}>
+                        Сохранить маршрут
                     </button>
 
                     <div
