@@ -3,9 +3,17 @@ import RoutePointInput from "./RoutePointInput"
 import destinationSVG from "../assets/destination.svg"
 import { useAuth } from "../context/AuthContext";
 
-export default function RouteBuilder({ routePoints, setRoutePoints, setRouteGeometry }) {
+export default function RouteBuilder({
+    routePoints,
+    setRoutePoints,
+    setRouteGeometry,
+    currentRouteId,
+    setCurrentRouteId,
+    currentRouteName,
+    setCurrentRouteName
+}) {
     const [isRouteBuilderActive, setIsRouteBuilderActive] = useState(false)
-    const { isAuthenticated } = useAuth();
+    const { isAuthenticated } = useAuth()
 
     const addPoint = () => {
         setRoutePoints(prev => [
@@ -44,7 +52,7 @@ export default function RouteBuilder({ routePoints, setRoutePoints, setRouteGeom
         setRouteGeometry(data.route.coordinates || [])
     }
 
-    async function handleSave() {
+    async function handleSaveAsNew() {
         if (!isAuthenticated) {
             alert("Сначала войдите в профиль");
             return;
@@ -55,7 +63,10 @@ export default function RouteBuilder({ routePoints, setRoutePoints, setRouteGeom
             return;
         }
     
-        const name = prompt("Название маршрута:");
+        const defaultName = currentRouteName
+        ? `${currentRouteName} (копия)`
+        : "";
+        const name = window.prompt("Название нового маршрута:", defaultName);
         if (!name) return;
     
         const res = await fetch("http://localhost:4000/api/routes/save", {
@@ -70,13 +81,62 @@ export default function RouteBuilder({ routePoints, setRoutePoints, setRouteGeom
     
         const data = await res.json().catch(() => ({}));
         if (!res.ok) {
-            console.log("data.error:", data.error)
             alert(data.error || "Не удалось сохранить маршрут");
             return;
         }
     
-        alert("Маршрут сохранён!");
-      }
+        alert("Новый маршрут сохранён!");
+    }
+    
+    async function handleUpdateExisting() {
+        if (!isAuthenticated) {
+            alert("Сначала войдите в профиль");
+            return;
+        }
+      
+        if (!currentRouteId) {
+            alert("Нет выбранного маршрута для редактирования");
+            return;
+        }
+      
+        if (!routePoints || routePoints.length < 2) {
+            alert("Сначала постройте маршрут (минимум 2 точки)");
+            return;
+        }
+      
+        const confirmUpdate = window.confirm(
+            `Сохранить изменения в маршруте "${currentRouteName || "Без имени"}"?`
+        );
+        if (!confirmUpdate) return;
+      
+        const nameInput = window.prompt(
+            "Название маршрута:",
+            currentRouteName || ""
+        );
+        const finalName = nameInput || currentRouteName || "Без имени";
+      
+        const res = await fetch(
+            `http://localhost:4000/api/routes/${currentRouteId}`,
+            {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({
+                    name: finalName,
+                    points: routePoints,
+                }),
+            }
+        );
+      
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+            alert(data.error || "Не удалось обновить маршрут");
+            return;
+        }
+      
+        setCurrentRouteName(data.route.name || finalName);
+        alert("Изменения маршрута сохранены");
+    }
 
     return (
         <>
@@ -113,9 +173,14 @@ export default function RouteBuilder({ routePoints, setRoutePoints, setRouteGeom
                         Построить
                     </button>
 
-                    <button onClick={handleSave}>
-                        Сохранить маршрут
-                    </button>
+                    <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+                        <button onClick={handleUpdateExisting} disabled={!currentRouteId}>
+                            Сохранить изменения
+                        </button>
+                        <button onClick={handleSaveAsNew}>
+                            Сохранить как новый
+                        </button>
+                    </div>
 
                     <div
                         style={{

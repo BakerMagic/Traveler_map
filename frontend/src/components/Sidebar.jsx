@@ -10,7 +10,11 @@ export default function Sidebar({
   location, 
   routePoints, 
   setRoutePoints,
-  setRouteGeometry 
+  setRouteGeometry,
+  currentRouteId,
+  setCurrentRouteId,
+  currentRouteName,
+  setCurrentRouteName
 }) {
   return (
       <div style={{
@@ -24,6 +28,10 @@ export default function Sidebar({
             routePoints={routePoints}
             setRoutePoints={setRoutePoints}
             setRouteGeometry={setRouteGeometry}
+            currentRouteId={currentRouteId}
+            setCurrentRouteId={setCurrentRouteId}
+            currentRouteName={currentRouteName}
+            setCurrentRouteName={setCurrentRouteName}
           />
 {/* 
           <div>

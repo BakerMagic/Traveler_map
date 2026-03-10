@@ -1,7 +1,7 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 
 export default function RoutePointInput({ point, index, routePoints, setRoutePoints }) {
-    const [query, setQuery] = useState("")
+    const [query, setQuery] = useState(point.name || "")
     const [results, setResults] = useState([])
 
     const handleSearch = async () => {
@@ -31,6 +31,10 @@ export default function RoutePointInput({ point, index, routePoints, setRoutePoi
         setResults([])
         setQuery(result.display_name)
     }
+
+    useEffect(() => {
+        setQuery(point.name || "");
+    }, [point.name]);
 
     return (
         <div style={{ marginBottom: "20px" }}>

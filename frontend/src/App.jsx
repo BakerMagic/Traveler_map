@@ -8,6 +8,8 @@ function App() {
   const [location, setLocation] = useState(null)
   const [routePoints, setRoutePoints] = useState([])
   const [routeGeometry, setRouteGeometry] = useState(null)
+  const [currentRouteId, setCurrentRouteId] = useState(null)
+  const [currentRouteName, setCurrentRouteName] = useState("")
 
   return (
     <div style={{display: "flex", height: "100vh"}}>
@@ -21,6 +23,10 @@ function App() {
         routePoints={routePoints}
         setRoutePoints={setRoutePoints}
         setRouteGeometry={setRouteGeometry}
+        currentRouteId={currentRouteId}
+        setCurrentRouteId={setCurrentRouteId}
+        currentRouteName={currentRouteName}
+        setCurrentRouteName={setCurrentRouteName}
       />
 
       {/* Карта */}
@@ -31,6 +37,11 @@ function App() {
         setLocation={setLocation}
         routePoints={routePoints}
         routeGeometry={routeGeometry}
+        currentRouteId={currentRouteId}
+        setCurrentRouteId={setCurrentRouteId}
+        setRoutePoints={setRoutePoints}
+        setRouteGeometry={setRouteGeometry}
+        setCurrentRouteName={setCurrentRouteName}
       />
     </div>
   )

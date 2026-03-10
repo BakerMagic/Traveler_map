@@ -73,4 +73,76 @@ router.get("/list", requireAuth, async (req, res) => {
     }
 });
 
+router.get("/:id", requireAuth, async (req, res) => {
+    try {
+        const { id } = req.params;
+    
+        const result = await pool.query(
+            `SELECT id, name, points, created_at
+            FROM routes
+            WHERE id = $1 AND profile_id = $2`,
+            [id, req.user.id]
+        );
+    
+        if (result.rowCount === 0) {
+            return res.status(404).json({ error: "Маршрут не найден" });
+        }
+    
+        res.json({ route: result.rows[0] });
+    } catch (err) {
+        console.error("Error loading route:", err);
+        res.status(500).json({ error: "Ошибка при загрузке маршрута" });
+    }
+});
+
+router.put("/:id", requireAuth, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { name, points } = req.body;
+    
+        if (!points || !Array.isArray(points) || points.length < 2) {
+            return res.status(400).json({ error: "Нужно минимум 2 точки" });
+        }
+    
+        const result = await pool.query(
+            `UPDATE routes
+            SET name = COALESCE($1, name),
+                points = $2
+            WHERE id = $3 AND profile_id = $4
+            RETURNING id, name, created_at`,
+            [name || null, JSON.stringify(points), id, req.user.id]
+        );
+    
+        if (result.rowCount === 0) {
+            return res.status(404).json({ error: "Маршрут не найден" });
+        }
+    
+        res.json({ route: result.rows[0] });
+    } catch (err) {
+        console.error("Error updating route:", err);
+        res.status(500).json({ error: "Ошибка при обновлении маршрута" });
+    }
+});
+
+router.delete("/:id", requireAuth, async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const result = await pool.query(
+            `DELETE FROM routes
+            WHERE id = $1 AND profile_id = $2`,
+            [id, req.user.id]
+        );
+
+        if (result.rowCount === 0) {
+            return res.status(404).json({ error: "Маршрут не найден" });
+        }
+
+        res.status(204).end();
+    } catch (err) {
+        console.error("Error deleting route:", err);
+        res.status(500).json({ error: "Ошибка при удалении маршрута" });
+    }
+});
+
 export default router

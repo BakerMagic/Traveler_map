@@ -23,13 +23,144 @@ export default function MapComponent({
     location,
     setLocation,
     routePoints,
-    routeGeometry
+    routeGeometry,
+    currentRouteId,
+    setCurrentRouteId,
+    setRoutePoints,
+    setRouteGeometry,
+    setCurrentRouteName
 }) {
     const mapRef = useRef()
     const vectorSourceRef = useRef(new VectorSource())
-    const { user, isAuthenticated, logout } = useAuth();
-    const [authOpen, setAuthOpen] = useState(false);
-    const [profileOpen, setProfileOpen] = useState(false);
+    const { user, isAuthenticated, logout } = useAuth()
+    const [authOpen, setAuthOpen] = useState(false)
+    const [profileOpen, setProfileOpen] = useState(false)
+
+    function generateNumberedMarkerSVG(number) {
+        const svg = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="40" height="90">
+                <circle cx="20" cy="20" r="15" fill="#ff5722"/>
+                <path d="M 10 31 Q 18 37 20 45 Q 22 37 30 31" fill="#ff5722"/>
+                <circle cx="20" cy="20" r="7" fill="white"/>              
+                <text x="20" y="25" text-anchor="middle" font-size="12" fill="black">${number}</text>
+            </svg>
+        `
+    
+        return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg)
+    }
+    
+    function setDefaultMarkerSVG(lat, lon) {
+        const svg = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="40" height="90">
+                <circle cx="20" cy="20" r="15" fill="red"/>
+                <path d="M 10 31 Q 18 37 20 45 Q 22 37 30 31" fill="red"/>
+                <circle cx="20" cy="20" r="6" fill="white"/>              
+            </svg>
+        `
+    
+        const marker = new Feature({
+            geometry: new Point(fromLonLat([lon, lat]))
+        })
+    
+        marker.set("type", "searchMarker")
+    
+        marker.setStyle(
+            new Style({
+                image: new Icon({
+                    src: "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg),
+                    scale: 1
+                })
+            })
+        )
+    
+        return marker
+    }
+    
+    async function getWeather(lat, lon, setWeather, setForecast) {
+        try {
+            const [currentResponse, forecastResponse] = await Promise.all([
+                fetch(`http://localhost:4000/api/weather/current?lat=${lat}&lon=${lon}`),
+                fetch(`http://localhost:4000/api/weather/forecast?lat=${lat}&lon=${lon}`)
+            ])
+    
+            if (currentResponse.ok) {
+                const { weather } = await currentResponse.json()
+                setWeather(weather)
+            } else {
+                console.error("Current weather error", currentResponse.status)
+            }
+    
+            if (forecastResponse.ok) {
+                const { forecast } = await forecastResponse.json()
+                setForecast(forecast)
+            } else {
+                console.error("Forecast error", forecastResponse.status)
+            }
+        } catch (error) {
+            console.error("Weather fetch error", error)
+        }
+    }
+    
+    async function loadRouteAndShowOnMap(routeId) {
+        try {
+            const res = await fetch(`http://localhost:4000/api/routes/${routeId}`, {
+                credentials: "include",
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok || !data.route) {
+                alert(data.error || "Не удалось загрузить маршрут");
+                return;
+            }
+        
+            const route = data.route;
+        
+            setRoutePoints(route.points || []);
+            setCurrentRouteId(route.id);
+            setCurrentRouteName(route.name || "");
+        
+            // Строим путь по этим точкам
+            const buildRes = await fetch("http://localhost:4000/api/routes", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                points: route.points,
+                profile: "driving-car",
+                }),
+            });
+        
+            const buildData = await buildRes.json().catch(() => ({}));
+            if (!buildRes.ok || !buildData.route) {
+                console.error("Route build error:", buildRes.status, buildData.error);
+                alert(buildData.error || "Не удалось построить маршрут");
+                return;
+            }
+        
+            setRouteGeometry(buildData.route.coordinates || []);
+        } catch (e) {
+            console.error("loadRouteAndShowOnMap error", e);
+            alert("Ошибка при загрузке маршрута");
+        }
+      }
+      
+    async function deleteRouteById(routeId) {
+        const res = await fetch(`http://localhost:4000/api/routes/${routeId}`, {
+            method: "DELETE",
+            credentials: "include",
+        });
+        if (!res.ok && res.status !== 204) {
+            const data = await res.json().catch(() => ({}));
+            alert(data.error || "Не удалось удалить маршрут");
+            return;
+        }
+      
+        // Если удаляем текущий редактируемый маршрут, то сбрасываем состояние
+        if (currentRouteId === routeId) {
+            setCurrentRouteId(null);
+            setCurrentRouteName("");
+            setRoutePoints([]);
+            setRouteGeometry(null);
+        }
+    }
 
     useEffect(() => { // Карта и погода
         console.log("1")
@@ -264,14 +395,17 @@ export default function MapComponent({
                     <button
                         onClick={() => setProfileOpen(true)}
                         style={{
-                        width: 40,
-                        height: 40,
-                        borderRadius: "50%",
-                        border: "none",
-                        background: "#1976d2",
-                        color: "white",
-                        fontWeight: 600,
-                        cursor: "pointer",
+                            display: "flex",
+                            justifyContent: "center",
+                            alignItems: "center",
+                            width: 40,
+                            height: 40,
+                            borderRadius: "50%",
+                            border: "none",
+                            background: "#1976d2",
+                            color: "white",
+                            fontWeight: 600,
+                            cursor: "pointer",
                         }}
                     >
                         {user.username?.[0]?.toUpperCase() || "P"}
@@ -279,13 +413,13 @@ export default function MapComponent({
                     <button
                         onClick={logout}
                         style={{
-                        padding: "6px 10px",
-                        borderRadius: 999,
-                        border: "none",
-                        background: "#333",
-                        color: "white",
-                        cursor: "pointer",
-                        fontSize: 12,
+                            padding: "6px 10px",
+                            borderRadius: 999,
+                            border: "none",
+                            background: "#333",
+                            color: "white",
+                            cursor: "pointer",
+                            fontSize: 12,
                         }}
                     >
                         Выйти
@@ -311,73 +445,12 @@ export default function MapComponent({
 
             <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} />
             {profileOpen && (
-            <ProfilePage onClose={() => setProfileOpen(false)} />
+            <ProfilePage
+                onClose={() => setProfileOpen(false)}
+                onSelectRouteForEdit={loadRouteAndShowOnMap}
+                onDeleteRoute={deleteRouteById}
+            />
             )}
         </div>
     )
-}
-
-function generateNumberedMarkerSVG(number) {
-    const svg = `
-        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="90">
-            <circle cx="20" cy="20" r="15" fill="#ff5722"/>
-            <path d="M 10 31 Q 18 37 20 45 Q 22 37 30 31" fill="#ff5722"/>
-            <circle cx="20" cy="20" r="7" fill="white"/>              
-            <text x="20" y="25" text-anchor="middle" font-size="12" fill="black">${number}</text>
-        </svg>
-    `
-
-    return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg)
-}
-
-function setDefaultMarkerSVG(lat, lon) {
-    const svg = `
-        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="90">
-            <circle cx="20" cy="20" r="15" fill="red"/>
-            <path d="M 10 31 Q 18 37 20 45 Q 22 37 30 31" fill="red"/>
-            <circle cx="20" cy="20" r="6" fill="white"/>              
-        </svg>
-    `
-
-    const marker = new Feature({
-        geometry: new Point(fromLonLat([lon, lat]))
-    })
-
-    marker.set("type", "searchMarker")
-
-    marker.setStyle(
-        new Style({
-            image: new Icon({
-                src: "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg),
-                scale: 1
-            })
-        })
-    )
-
-    return marker
-}
-
-async function getWeather(lat, lon, setWeather, setForecast) {
-    try {
-        const [currentResponse, forecastResponse] = await Promise.all([
-            fetch(`http://localhost:4000/api/weather/current?lat=${lat}&lon=${lon}`),
-            fetch(`http://localhost:4000/api/weather/forecast?lat=${lat}&lon=${lon}`)
-        ])
-
-        if (currentResponse.ok) {
-            const { weather } = await currentResponse.json()
-            setWeather(weather)
-        } else {
-            console.error("Current weather error", currentResponse.status)
-        }
-
-        if (forecastResponse.ok) {
-            const { forecast } = await forecastResponse.json()
-            setForecast(forecast)
-        } else {
-            console.error("Forecast error", forecastResponse.status)
-        }
-    } catch (error) {
-        console.error("Weather fetch error", error)
-    }
 }
