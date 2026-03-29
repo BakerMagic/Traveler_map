@@ -84,6 +84,8 @@ export default function RouteBuilder({
         }
     
         alert("Новый маршрут сохранён!");
+
+        resetRouteBuilderState()
     }
     
     async function handleUpdateExisting() {
@@ -134,6 +136,19 @@ export default function RouteBuilder({
       
         setCurrentRouteName(data.route.name || finalName);
         alert("Изменения маршрута сохранены");
+
+        resetRouteBuilderState()
+    }
+
+    const resetRouteBuilderState = () => {
+        const t = Date.now()
+        setRoutePoints([
+            { id: `${t}-0`, name: "", lat: null, lon: null },
+            { id: `${t}-1`, name: "", lat: null, lon: null },
+        ])
+        setRouteGeometry(null)
+        setCurrentRouteId && setCurrentRouteId(null)
+        setCurrentRouteName && setCurrentRouteName("")
     }
 
     return (
@@ -148,10 +163,6 @@ export default function RouteBuilder({
                         setRoutePoints={setRoutePoints}
                     />
                 ))}
-
-                <button onClick={addPoint} className="addPointBtn">
-                    + Добавить точку
-                </button>
             </div>
 
             <button onClick={buildRoute}>
@@ -159,10 +170,15 @@ export default function RouteBuilder({
             </button>
 
             <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-                <button onClick={handleUpdateExisting} disabled={!currentRouteId}>
+                <button
+                    onClick={handleUpdateExisting} 
+                    disabled={!currentRouteId}
+                >
                     Сохранить изменения
                 </button>
-                <button onClick={handleSaveAsNew}>
+                <button
+                    onClick={handleSaveAsNew}
+                >
                     Сохранить как новый
                 </button>
             </div>
@@ -170,28 +186,37 @@ export default function RouteBuilder({
             <div
                 style={{
                     display: "flex",
-                    justifyContent: "flex-end",
-                    alignItems: "flex-end",
-                    textAlign: "right"
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    marginTop: 8
                 }}
             >
                 <p
                     style={{
                         display: "inline-block",
                         margin: 0,
-                        fontSize: 12,
+                        fontSize: 14,
                         color: "#777",
                         cursor: "pointer"
                     }}
                     onMouseEnter={(e) => (e.currentTarget.style.color = "#999")}
                     onMouseLeave={(e) => (e.currentTarget.style.color = "#777")}
-                    onClick={() => {
-                        setRoutePoints([])
-                        setRouteGeometry(null)
-                        // Сбрасываю, но не закрываю
-                        setIsRouteBuilderActive(false)
-                        setIsRouteBuilderActive(true)
+                    onClick={addPoint} 
+                    className="addPointBtn"
+                >
+                    + Добавить точку
+                </p>
+                <p
+                    style={{
+                        display: "inline-block",
+                        margin: 0,
+                        fontSize: 14,
+                        color: "#777",
+                        cursor: "pointer"
                     }}
+                    onMouseEnter={(e) => (e.currentTarget.style.color = "#999")}
+                    onMouseLeave={(e) => (e.currentTarget.style.color = "#777")}
+                    onClick={() => resetRouteBuilderState()}
                 >
                     Сбросить
                 </p>

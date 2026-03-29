@@ -67,6 +67,14 @@ export default function Search({
         setIsRouteBuilderActive(false)
     };
 
+    function createTwoEmptyRoutePoints() {
+        const t = Date.now()
+        return [
+            { id: `${t}-0`, name: "", lat: null, lon: null },
+            { id: `${t}-1`, name: "", lat: null, lon: null },
+        ]
+    }
+
     return (
         <div className="sidebar">
             <div
@@ -106,7 +114,10 @@ export default function Search({
                             padding: 7
                         }}
                         className="destinationBtn"
-                        onClick={() => setIsRouteBuilderActive(true)}
+                        onClick={() => {
+                            setIsRouteBuilderActive(true)
+                            setRoutePoints((prev) => (prev.length === 0 ? createTwoEmptyRoutePoints() : prev))
+                        }}
                     >
                         <img src={destinationSVG} width="25" height="25"></img>
                     </button>
