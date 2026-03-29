@@ -163,7 +163,6 @@ export default function MapComponent({
     }
 
     useEffect(() => { // Карта и погода
-        console.log("1")
         const vectorLayer = new VectorLayer({
             source: vectorSourceRef.current
         })

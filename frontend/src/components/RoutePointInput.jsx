@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react"
+import { getFeatureKindRu } from '../utils/addressType'
+import { buildDisplayTitle } from '../utils/displayTitle'
 
 export default function RoutePointInput({ point, index, routePoints, setRoutePoints }) {
     const [query, setQuery] = useState(point.name || "")
@@ -8,7 +10,7 @@ export default function RoutePointInput({ point, index, routePoints, setRoutePoi
         if (!query.trim()) return
 
         const response = await fetch(
-            `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&accept-language="browser language string"&namedetails=1&limit=5`
+            `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&accept-language=ru,en&namedetails=1&limit=5`
         )
 
         const data = await response.json()
@@ -16,6 +18,8 @@ export default function RoutePointInput({ point, index, routePoints, setRoutePoi
     }
 
     const selectLocation = (result) => {
+        const updatedName = buildDisplayTitle(result);
+
         const updated = routePoints.map(p => 
             p.id === point.id
             ? {
@@ -50,21 +54,30 @@ export default function RoutePointInput({ point, index, routePoints, setRoutePoi
 
             {results.length > 0 && (
                 <div>
-                    {results.map(result => (
+                    {results.map(result => {
+                        const title = buildDisplayTitle(result);
+                        const kind = getFeatureKindRu(result);
 
-                        <button 
-                            key={result.place_id}
-                            onClick={() => selectLocation(result)}
-                            style={{
-                                display: "block",
-                                width: "100%",
-                                textAlign: "left",
-                                marginBottom: 8
-                            }}
-                        >
-                            {result.display_name}
-                        </button>
-                    ))}
+                        return (
+                            <button 
+                                key={result.place_id}
+                                onClick={() => selectLocation(result)}
+                                style={{
+                                    display: "block",
+                                    width: "100%",
+                                    textAlign: "left",
+                                    marginBottom: 8,
+                                    padding: "4px 6px",
+                                    borderRadius: 6,
+                                    border: "1px solid #ddd",
+                                    cursor: "pointer",
+                                }}
+                            >
+                                <div style={{ fontSize: 14 }}>{title}</div>
+                                <div style={{ fontSize: 11, color: "#777" }}>{kind}</div>
+                            </button>
+                        )
+                    })}
                 </div>
             )}
         </div>

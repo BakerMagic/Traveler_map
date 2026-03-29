@@ -1,6 +1,4 @@
-import { useState } from "react"
 import RoutePointInput from "./RoutePointInput"
-import destinationSVG from "../assets/destination.svg"
 import { useAuth } from "../context/AuthContext";
 
 export default function RouteBuilder({
@@ -10,9 +8,9 @@ export default function RouteBuilder({
     currentRouteId,
     setCurrentRouteId,
     currentRouteName,
-    setCurrentRouteName
+    setCurrentRouteName,
+    setIsRouteBuilderActive
 }) {
-    const [isRouteBuilderActive, setIsRouteBuilderActive] = useState(false)
     const { isAuthenticated } = useAuth()
 
     const addPoint = () => {
@@ -140,77 +138,64 @@ export default function RouteBuilder({
 
     return (
         <>
-            {!isRouteBuilderActive && (<button 
+            <div>
+                {routePoints.map((point, index) => (
+                    <RoutePointInput
+                        key={point.id}
+                        point={point}
+                        index={index}
+                        routePoints={routePoints}
+                        setRoutePoints={setRoutePoints}
+                    />
+                ))}
+
+                <button onClick={addPoint} className="addPointBtn">
+                    + Добавить точку
+                </button>
+            </div>
+
+            <button onClick={buildRoute}>
+                Построить
+            </button>
+
+            <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+                <button onClick={handleUpdateExisting} disabled={!currentRouteId}>
+                    Сохранить изменения
+                </button>
+                <button onClick={handleSaveAsNew}>
+                    Сохранить как новый
+                </button>
+            </div>
+
+            <div
                 style={{
-                    display: "block",
-                    padding: 7
+                    display: "flex",
+                    justifyContent: "flex-end",
+                    alignItems: "flex-end",
+                    textAlign: "right"
                 }}
-                className="destinationBtn"
-                onClick={() => setIsRouteBuilderActive(true)}
             >
-                <img src={destinationSVG} width="25" height="25"></img>
-            </button>)}
-
-            {isRouteBuilderActive && (
-                <>
-                    <div>
-                        {routePoints.map((point, index) => (
-                            <RoutePointInput
-                                key={point.id}
-                                point={point}
-                                index={index}
-                                routePoints={routePoints}
-                                setRoutePoints={setRoutePoints}
-                            />
-                        ))}
-
-                        <button onClick={addPoint} className="addPointBtn">
-                            + Добавить точку
-                        </button>
-                    </div>
-
-                    <button onClick={buildRoute}>
-                        Построить
-                    </button>
-
-                    <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-                        <button onClick={handleUpdateExisting} disabled={!currentRouteId}>
-                            Сохранить изменения
-                        </button>
-                        <button onClick={handleSaveAsNew}>
-                            Сохранить как новый
-                        </button>
-                    </div>
-
-                    <div
-                        style={{
-                            display: "flex",
-                            justifyContent: "flex-end",
-                            alignItems: "flex-end",
-                            textAlign: "right"
-                        }}
-                    >
-                        <p
-                            style={{
-                                display: "inline-block",
-                                margin: 0,
-                                fontSize: 12,
-                                color: "#777",
-                                cursor: "pointer"
-                            }}
-                            onMouseEnter={(e) => (e.currentTarget.style.color = "#999")}
-                            onMouseLeave={(e) => (e.currentTarget.style.color = "#777")}
-                            onClick={() => {
-                                setRoutePoints([])
-                                setRouteGeometry(null)
-                                setIsRouteBuilderActive(false)
-                            }}
-                        >
-                            Сбросить
-                        </p>
-                    </div>
-                </>
-            )}
+                <p
+                    style={{
+                        display: "inline-block",
+                        margin: 0,
+                        fontSize: 12,
+                        color: "#777",
+                        cursor: "pointer"
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.color = "#999")}
+                    onMouseLeave={(e) => (e.currentTarget.style.color = "#777")}
+                    onClick={() => {
+                        setRoutePoints([])
+                        setRouteGeometry(null)
+                        // Сбрасываю, но не закрываю
+                        setIsRouteBuilderActive(false)
+                        setIsRouteBuilderActive(true)
+                    }}
+                >
+                    Сбросить
+                </p>
+            </div>
         </>
     )
 }
