@@ -1,0 +1,121 @@
+.overlay {
+  position: fixed;
+  right: 24px;
+  top: 72px;
+  width: 320px;
+  background: rgba(18, 18, 18, 0.96);
+  color: white;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7);
+  z-index: 1800;
+  backdrop-filter: blur(10px);
+}
+
+.headerRow {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.title {
+  margin: 0;
+  font-size: 20px;
+}
+
+.closeBtn {
+  border: none;
+  background: transparent;
+  color: #aaa;
+  cursor: pointer;
+  font-size: 18px;
+}
+
+.userRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #1976d2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 20px;
+}
+
+.userName {
+  font-weight: 600;
+}
+
+.userEmail {
+  font-size: 14px;
+  color: #aaa;
+}
+
+.section {
+  font-size: 14px;
+  color: #ccc;
+}
+
+.error {
+  color: #f44336;
+}
+
+.routesList {
+  max-height: 240px;
+  overflow-y: auto;
+  margin-top: 8px;
+}
+
+.routeCard {
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  margin-bottom: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.routeName {
+  font-weight: 500;
+}
+
+.routeDate {
+  font-size: 12px;
+  color: #999;
+}
+
+.routeActions {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.btnPrimary {
+  flex: 1;
+  border: none;
+  padding: 4px 6px;
+  border-radius: 999px;
+  background: #1976d2;
+  color: white;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.btnSecondary {
+  border: none;
+  padding: 4px 6px;
+  border-radius: 999px;
+  background: #444;
+  color: #fff;
+  cursor: pointer;
+  font-size: 12px;
+}

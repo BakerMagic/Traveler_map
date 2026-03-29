@@ -1,5 +1,6 @@
 import RoutePointInput from "./RoutePointInput"
 import { useAuth } from "../context/AuthContext";
+import styles from "../styles/RouteBuilder.module.css";
 
 export default function RouteBuilder({
     routePoints,
@@ -169,53 +170,31 @@ export default function RouteBuilder({
                 Построить
             </button>
 
-            <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+            <div className={styles.actionsRow}>
                 <button
+                    type="button"
                     onClick={handleUpdateExisting} 
                     disabled={!currentRouteId}
                 >
                     Сохранить изменения
                 </button>
                 <button
+                    type="button"
                     onClick={handleSaveAsNew}
                 >
                     Сохранить как новый
                 </button>
             </div>
 
-            <div
-                style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    marginTop: 8
-                }}
-            >
+            <div className={styles.footerRow}>
                 <p
-                    style={{
-                        display: "inline-block",
-                        margin: 0,
-                        fontSize: 14,
-                        color: "#777",
-                        cursor: "pointer"
-                    }}
-                    onMouseEnter={(e) => (e.currentTarget.style.color = "#999")}
-                    onMouseLeave={(e) => (e.currentTarget.style.color = "#777")}
+                    className={`${styles.textAction} addPointBtn`}
                     onClick={addPoint} 
-                    className="addPointBtn"
                 >
                     + Добавить точку
                 </p>
                 <p
-                    style={{
-                        display: "inline-block",
-                        margin: 0,
-                        fontSize: 14,
-                        color: "#777",
-                        cursor: "pointer"
-                    }}
-                    onMouseEnter={(e) => (e.currentTarget.style.color = "#999")}
-                    onMouseLeave={(e) => (e.currentTarget.style.color = "#777")}
+                    className={styles.textAction}
                     onClick={() => resetRouteBuilderState()}
                 >
                     Сбросить

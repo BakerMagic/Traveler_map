@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react"
 import { getFeatureKindRu } from '../utils/addressType'
 import { buildDisplayTitle } from '../utils/displayTitle'
+import styles from "../styles/RoutePointInput.module.css"
 
 export default function RoutePointInput({ point, index, routePoints, setRoutePoints }) {
     const [query, setQuery] = useState(point.name || "")
@@ -41,7 +42,7 @@ export default function RoutePointInput({ point, index, routePoints, setRoutePoi
     }, [point.name]);
 
     return (
-        <div style={{ marginBottom: "20px" }}>
+        <div className={styles.root}>
             <label>{index + 1} </label>
 
             <input 
@@ -61,20 +62,12 @@ export default function RoutePointInput({ point, index, routePoints, setRoutePoi
                         return (
                             <button 
                                 key={result.place_id}
+                                type="button"
                                 onClick={() => selectLocation(result)}
-                                style={{
-                                    display: "block",
-                                    width: "100%",
-                                    textAlign: "left",
-                                    marginBottom: 8,
-                                    padding: "4px 6px",
-                                    borderRadius: 6,
-                                    border: "1px solid #ddd",
-                                    cursor: "pointer",
-                                }}
+                                className={styles.resultBtn}
                             >
-                                <div style={{ fontSize: 14 }}>{title}</div>
-                                <div style={{ fontSize: 11, color: "#777" }}>{kind}</div>
+                                <div className={styles.resultTitle}>{title}</div>
+                                <div className={styles.resultKind}>{kind}</div>
                             </button>
                         )
                     })}

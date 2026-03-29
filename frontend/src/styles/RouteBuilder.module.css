@@ -1,0 +1,24 @@
+.actionsRow {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.footerRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.textAction {
+  display: inline-block;
+  margin: 0;
+  font-size: 14px;
+  color: #777;
+  cursor: pointer;
+}
+
+.textAction:hover {
+  color: #999;
+}

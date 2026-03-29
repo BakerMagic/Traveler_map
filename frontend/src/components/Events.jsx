@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react"
+import styles from "../styles/Events.module.css"
 
 export default function Events({ location, setLocation }) {
     const [events, setEvents] = useState([])
@@ -50,17 +51,12 @@ export default function Events({ location, setLocation }) {
     }, [location])
 
     return (
-        <div style={{
-            borderTop: "2px solid gray",
-            marginTop: 16,
-            paddingTop: 12,
-            width: "100%"
-        }}>
-            <h3 style={{ marginBottom: 8 }}>События рядом</h3>
+        <div className={styles.root}>
+            <h3 className={styles.title}>События рядом</h3>
 
             {eventsLoading && <p>Загрузка...</p>}
 
-            {eventsError && !eventsLoading && <p style={{ color: "red" }}>{eventsError}</p>}
+            {eventsError && !eventsLoading && <p className={styles.error}>{eventsError}</p>}
 
             {!eventsLoading && !eventsError && (!events || events.length === 0) && 
                 <p>Нет событий поблизости.</p>
@@ -71,35 +67,19 @@ export default function Events({ location, setLocation }) {
                     {events.map((event) => (
                         <div
                             key={event.id}
-                            style={{
-                                display: "block",
-                                width: "100%",
-                                textAlign: "left",
-                                marginBottom: 8,
-                                padding: 8,
-                                border: "1px solid #ddd",
-                                borderRadius: 4,
-                            }}>
+                            className={styles.eventCard}>
                                 <button
                                     type="button"
                                     onClick={() => handlePick(event.lat, event.lon)}
-                                    style={{
-                                        display: "block",
-                                        width: "100%",
-                                        textAlign: "left",
-                                        padding: 0,
-                                        border: "none",
-                                        background: "transparent",
-                                        cursor: "pointer"
-                                    }}
+                                    className={styles.eventPickBtn}
                                 >
-                                    <div style={{ fontWeight: "bold" }}>
+                                    <div className={styles.eventName}>
                                         {event.name}
                                     </div>
-                                    <div style={{ fontSize: 12, color: "#555" }}>
+                                    <div className={styles.eventMeta}>
                                         {event.date} {event.time && `в ${event.time}`}
                                     </div>
-                                    <div style={{ fontSize: 12, color: "#777" }}>
+                                    <div className={styles.eventVenue}>
                                         {event.venueName && `${event.venueName}, `}
                                         {event.address && `${event.address}, `}
                                         {event.city}
@@ -109,14 +89,7 @@ export default function Events({ location, setLocation }) {
                                 {event.url && (
                                     <a 
                                         href={event.url}
-                                        onMouseEnter={(e) => (e.currentTarget.style.color = "#777")}
-                                        onMouseLeave={(e) => (e.currentTarget.style.color = "#555")}
-                                        style={{
-                                            fontSize: 12,
-                                            color: "#555",
-                                            display: "inline-block",
-                                            marginTop: 6,
-                                        }}
+                                        className={styles.eventLink}
                                         target="_blank"
                                         rel="noopener noreferrer"
                                     >

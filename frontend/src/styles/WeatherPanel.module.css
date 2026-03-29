@@ -1,0 +1,59 @@
+.root {
+  position: relative;
+}
+
+.forecastToggle {
+  margin-top: 8px;
+}
+
+.forecastPanel {
+  position: fixed;
+  top: 0;
+  width: 375px;
+  height: 100vh;
+  background: #242424;
+  box-shadow: 2px 0 10px regb(0, 0, 0, 0.2);
+  padding: 16px;
+  transition: left 0.3s ease;
+  overflow-y: auto;
+  z-index: 1000;
+}
+
+.forecastPanelClosed {
+  left: -450px;
+}
+
+.forecastPanelOpen {
+  left: 0;
+}
+
+.forecastHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.closeIcon {
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-end;
+  cursor: pointer;
+  text-align: right;
+  stroke: #777;
+}
+
+.closeIcon:hover {
+  stroke: #bbb;
+}
+
+.forecastItem {
+  margin-bottom: 12px;
+  border-bottom: 1px solid #eee;
+  padding: 8px;
+}
+
+.forecastItemTime {
+  font-size: 12px;
+  color: #555;
+}

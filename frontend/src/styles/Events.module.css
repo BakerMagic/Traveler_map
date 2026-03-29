@@ -1,0 +1,59 @@
+.root {
+  border-top: 2px solid gray;
+  margin-top: 16px;
+  padding-top: 12px;
+  width: 100%;
+}
+
+.title {
+  margin-bottom: 8px;
+}
+
+.error {
+  color: red;
+}
+
+.eventCard {
+  display: block;
+  width: 100%;
+  text-align: left;
+  margin-bottom: 8px;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.eventPickBtn {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.eventName {
+  font-weight: bold;
+}
+
+.eventMeta {
+  font-size: 12px;
+  color: #555;
+}
+
+.eventVenue {
+  font-size: 12px;
+  color: #777;
+}
+
+.eventLink {
+  font-size: 12px;
+  color: #555;
+  display: inline-block;
+  margin-top: 6px;
+}
+
+.eventLink:hover {
+  color: #777;
+}

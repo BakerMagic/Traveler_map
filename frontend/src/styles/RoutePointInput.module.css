@@ -1,0 +1,23 @@
+.root {
+  margin-bottom: 20px;
+}
+
+.resultBtn {
+  display: block;
+  width: 100%;
+  text-align: left;
+  margin-bottom: 8px;
+  padding: 4px 6px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+  cursor: pointer;
+}
+
+.resultTitle {
+  font-size: 14px;
+}
+
+.resultKind {
+  font-size: 11px;
+  color: #777;
+}

@@ -1,0 +1,40 @@
+.searchRow {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.iconButton {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 7px;
+}
+
+.routeBuilderWrap {
+  margin-top: 8px;
+}
+
+.results {
+  margin-top: 12px;
+}
+
+.resultBtn {
+  display: block;
+  width: 100%;
+  text-align: left;
+  margin-bottom: 8px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+  cursor: pointer;
+}
+
+.resultTitle {
+  font-weight: 500;
+}
+
+.resultKind {
+  font-size: 12px;
+  color: #666;
+}

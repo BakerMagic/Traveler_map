@@ -4,6 +4,7 @@ import { buildDisplayTitle } from '../utils/displayTitle'
 import RouteBuilder from "./RouteBuilder"
 import destinationSVG from "../assets/destination.svg"
 import crossSVG from "../assets/cross.svg"
+import styles from "../styles/Search.module.css"
 
 export default function Search({
     setLocation,
@@ -77,13 +78,7 @@ export default function Search({
 
     return (
         <div className="sidebar">
-            <div
-                style={{
-                    display: "flex",
-                    gap: 8,
-                    marginBottom: 8,
-                }}
-            >
+            <div className={styles.searchRow}>
                 <input 
                     type="text"
                     value={query}
@@ -94,26 +89,14 @@ export default function Search({
 
                 {hasSearchData || isRouteBuilderActive ? (
                     <button 
-                        style={{
-                            display: "flex",
-                            justifyContent: "center",
-                            alignItems: "center",
-                            padding: 7
-                        }}
-                        className="crossBtn"
+                        className={`${styles.iconButton} crossBtn`}
                         onClick={() => handleClearAll()}
                     >
                         <img src={crossSVG} width="25" height="25"></img>
                     </button>
                 ) : (
                     <button 
-                        style={{
-                            display: "flex",
-                            justifyContent: "center",
-                            alignItems: "center",
-                            padding: 7
-                        }}
-                        className="destinationBtn"
+                        className={`${styles.iconButton} destinationBtn`}
                         onClick={() => {
                             setIsRouteBuilderActive(true)
                             setRoutePoints((prev) => (prev.length === 0 ? createTwoEmptyRoutePoints() : prev))
@@ -124,7 +107,7 @@ export default function Search({
                 )}
             </div>
             {isRouteBuilderActive && (
-                <div style={{ marginTop: 8 }}>
+                <div className={styles.routeBuilderWrap}>
                     <RouteBuilder
                         routePoints={routePoints}
                         setRoutePoints={setRoutePoints}
@@ -139,7 +122,7 @@ export default function Search({
             )}
 
             {results.length > 0 && (
-                <div style={{ marginTop: 12 }}>
+                <div className={styles.results}>
                     {results.map((item) => {
                         const title = buildDisplayTitle(item);
                         const kind = getFeatureKindRu(item);
@@ -147,20 +130,12 @@ export default function Search({
                         return (
                             <button 
                                 key={`${item.osm_type}-${item.osm_id}`}
+                                type="button"
                                 onClick={() => handlePick(item)}
-                                style={{
-                                    display: "block",
-                                    width: "100%",
-                                    textAlign: "left",
-                                    marginBottom: 8,
-                                    padding: "6px 8px",
-                                    borderRadius: 6,
-                                    border: "1px solid #ddd",
-                                    cursor: "pointer",
-                                }}
+                                className={styles.resultBtn}
                             >
-                                <div style={{ fontWeight: 500 }}>{title}</div>
-                                <div style={{ fontSize: 12, color: "#666" }}>{kind}</div>
+                                <div className={styles.resultTitle}>{title}</div>
+                                <div className={styles.resultKind}>{kind}</div>
                             </button>
                         )
                     })}

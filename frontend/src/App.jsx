@@ -1,6 +1,7 @@
 import { useState } from "react"
 import MapComponent from './components/Map'
 import Sidebar from './components/Sidebar'
+import styles from './App.module.css'
 
 function App() {
   const [weather, setWeather] = useState(null)
@@ -12,7 +13,7 @@ function App() {
   const [currentRouteName, setCurrentRouteName] = useState("")
 
   return (
-    <div style={{display: "flex", height: "100vh"}}>
+    <div className={styles.layout}>
 
       {/* Левая панель*/}
       <Sidebar 

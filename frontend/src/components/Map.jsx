@@ -16,6 +16,7 @@ import GeoJSON from "ol/format/GeoJSON"
 import { useAuth } from "../context/AuthContext";
 import AuthModal from "./AuthModal";
 import ProfilePage from "./ProfilePage"
+import styles from "../styles/Map.module.css"
 
 export default function MapComponent({
     setWeather,
@@ -371,71 +372,36 @@ export default function MapComponent({
     }, [routeGeometry])
 
     return (
-        <div style={{ position: "relative", height: "100vh", width: "100%" }}>
+        <div className={styles.root}>
             <div
                 ref={mapRef}
-                style={{ height: "100%", width: "100%" }}
+                className={styles.mapCanvas}
             />
 
             {/* Кнопка профиля */}
-            <div
-                style={{
-                    position: "absolute",
-                    top: 16,
-                    right: 16,
-                    zIndex: 1500,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 8,
-                }}
-            >
+            <div className={styles.toolbar}>
                 {isAuthenticated ? (
                     <>
                     <button
+                        type="button"
                         onClick={() => setProfileOpen(true)}
-                        style={{
-                            display: "flex",
-                            justifyContent: "center",
-                            alignItems: "center",
-                            width: 40,
-                            height: 40,
-                            borderRadius: "50%",
-                            border: "none",
-                            background: "#1976d2",
-                            color: "white",
-                            fontWeight: 600,
-                            cursor: "pointer",
-                        }}
+                        className={styles.avatarBtn}
                     >
                         {user.username?.[0]?.toUpperCase() || "P"}
                     </button>
                     <button
+                        type="button"
                         onClick={logout}
-                        style={{
-                            padding: "6px 10px",
-                            borderRadius: 999,
-                            border: "none",
-                            background: "#333",
-                            color: "white",
-                            cursor: "pointer",
-                            fontSize: 12,
-                        }}
+                        className={styles.logoutBtn}
                     >
                         Выйти
                     </button>
                     </>
                 ) : (
                     <button
+                        type="button"
                         onClick={() => setAuthOpen(true)}
-                        style={{
-                            padding: "6px 12px",
-                            borderRadius: 999,
-                            border: "none",
-                            background: "rgba(0,0,0,0.6)",
-                            color: "white",
-                            cursor: "pointer",
-                            backdropFilter: "blur(6px)",
-                        }}
+                        className={styles.loginBtn}
                     >
                     Войти
                     </button>

@@ -1,6 +1,7 @@
 import Events from "./Events"
 import Search from "./Search"
 import WeatherPanel from "./WeatherPanel"
+import styles from "../styles/Sidebar.module.css"
 
 export default function Sidebar({ 
   weather,
@@ -16,12 +17,7 @@ export default function Sidebar({
   setCurrentRouteName
 }) {
   return (
-      <div style={{
-          width: "500px",
-          padding: "20px",
-          boxShadow: "2px 0 10px rgba(0,0,0,0.1)",
-          overflowY: "auto"
-        }}>
+      <div className={styles.root}>
           <Search 
             setLocation={setLocation}
             routePoints={routePoints}
