@@ -11,10 +11,13 @@ export default function Sidebar({
   routePoints, 
   setRoutePoints,
   setRouteGeometry,
+  setRouteSummary,
   currentRouteId,
   setCurrentRouteId,
   currentRouteName,
-  setCurrentRouteName
+  setCurrentRouteName,
+  routeMode,
+  setRouteMode
 }) {
   return (
       <div className={styles.root}>
@@ -23,10 +26,13 @@ export default function Sidebar({
             routePoints={routePoints}
             setRoutePoints={setRoutePoints}
             setRouteGeometry={setRouteGeometry}
+            setRouteSummary={setRouteSummary}
             currentRouteId={currentRouteId}
             setCurrentRouteId={setCurrentRouteId}
             currentRouteName={currentRouteName}
             setCurrentRouteName={setCurrentRouteName}
+            routeMode={routeMode}
+            setRouteMode={setRouteMode}
           />
           <WeatherPanel weather={weather} forecast={forecast} />
           <Events location={location} setLocation={setLocation}/>

@@ -5,16 +5,20 @@ import RouteBuilder from "./RouteBuilder"
 import destinationSVG from "../assets/destination.svg"
 import crossSVG from "../assets/cross.svg"
 import styles from "../styles/Search.module.css"
+import { DEFAULT_ROUTE_MODE } from "../utils/routeProfiles"
 
 export default function Search({
     setLocation,
     routePoints, 
     setRoutePoints,
     setRouteGeometry,
+    setRouteSummary,
     currentRouteId,
     setCurrentRouteId,
     currentRouteName,
-    setCurrentRouteName
+    setCurrentRouteName,
+    routeMode,
+    setRouteMode
 }) {
     const [query, setQuery] = useState("")
     const [results, setResults] = useState([])
@@ -63,9 +67,11 @@ export default function Search({
 
         setRoutePoints && setRoutePoints([])
         setRouteGeometry && setRouteGeometry(null)
+        setRouteSummary && setRouteSummary(null)
         setCurrentRouteId && setCurrentRouteId(null)
         setCurrentRouteName && setCurrentRouteName("")
         setIsRouteBuilderActive(false)
+        setRouteMode?.(DEFAULT_ROUTE_MODE)
     };
 
     function createTwoEmptyRoutePoints() {
@@ -112,11 +118,14 @@ export default function Search({
                         routePoints={routePoints}
                         setRoutePoints={setRoutePoints}
                         setRouteGeometry={setRouteGeometry}
+                        setRouteSummary={setRouteSummary}
                         currentRouteId={currentRouteId}
                         setCurrentRouteId={setCurrentRouteId}
                         currentRouteName={currentRouteName}
                         setCurrentRouteName={setCurrentRouteName}
                         setIsRouteBuilderActive={setIsRouteBuilderActive}
+                        routeMode={routeMode}
+                        setRouteMode={setRouteMode}
                     />
                 </div>
             )}

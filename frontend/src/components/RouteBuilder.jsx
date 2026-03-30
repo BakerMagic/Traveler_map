@@ -1,8 +1,7 @@
-import { useState } from "react"
 import RoutePointInput from "./RoutePointInput"
 import { useAuth } from "../context/AuthContext";
 import styles from "../styles/RouteBuilder.module.css";
-import { ROUTE_MODES, DEFAULT_ROUTE_MODE, getProfileForMode } from "../utils/routeProfiles";
+import { DEFAULT_ROUTE_MODE, ROUTE_MODES, getProfileForMode } from "../utils/routeProfiles";
 import carSVG from "../assets/car.svg"
 import truckSVG from "../assets/truck.svg"
 import bikeSVG from "../assets/bike.svg"
@@ -12,14 +11,16 @@ export default function RouteBuilder({
     routePoints,
     setRoutePoints,
     setRouteGeometry,
+    setRouteSummary,
     currentRouteId,
     setCurrentRouteId,
     currentRouteName,
     setCurrentRouteName,
-    setIsRouteBuilderActive
+    setIsRouteBuilderActive,
+    routeMode,
+    setRouteMode
 }) {
     const { isAuthenticated } = useAuth()
-    const [routeMode, setRouteMode] = useState(DEFAULT_ROUTE_MODE);
 
     const addPoint = () => {
         setRoutePoints(prev => [
@@ -36,7 +37,7 @@ export default function RouteBuilder({
     const buildRoute = async () => {
         const points = routePoints.filter(p => p.lat && p.lon)
 
-        if (points.length< 2) {
+        if (points.length < 2) {
             alert("Нужно минимум 2 точки")
             return
         }
@@ -59,6 +60,11 @@ export default function RouteBuilder({
         console.log("route data:", data)
 
         setRouteGeometry(data.route.coordinates || [])
+        setRouteSummary?.({
+            distance: data.route.distance,   // метры
+            duration: data.route.duration,   // секунды
+            transportMode: routeMode
+        })
     }
 
     async function handleSaveAsNew() {
@@ -85,6 +91,7 @@ export default function RouteBuilder({
             body: JSON.stringify({
                 name,
                 points: routePoints,
+                transportMode: routeMode,
             }),
         });
     
@@ -135,6 +142,7 @@ export default function RouteBuilder({
                 body: JSON.stringify({
                     name: finalName,
                     points: routePoints,
+                    transportMode: routeMode,
                 }),
             }
         );
@@ -158,8 +166,10 @@ export default function RouteBuilder({
             { id: `${t}-1`, name: "", lat: null, lon: null },
         ])
         setRouteGeometry(null)
+        setRouteSummary?.(null)
         setCurrentRouteId && setCurrentRouteId(null)
         setCurrentRouteName && setCurrentRouteName("")
+        setRouteMode?.(DEFAULT_ROUTE_MODE)
     }
 
     const movePoint = (index, delta) => {

@@ -17,6 +17,11 @@ import { useAuth } from "../context/AuthContext";
 import AuthModal from "./AuthModal";
 import ProfilePage from "./ProfilePage"
 import styles from "../styles/Map.module.css"
+import { getProfileForMode } from "../utils/routeProfiles";
+import carSVG from "../assets/car.svg";
+import truckSVG from "../assets/truck.svg";
+import bikeSVG from "../assets/bike.svg";
+import walkSVG from "../assets/walk.svg";
 
 export default function MapComponent({
     setWeather,
@@ -25,17 +30,21 @@ export default function MapComponent({
     setLocation,
     routePoints,
     routeGeometry,
+    routeSummary,
+    setRouteSummary,
     currentRouteId,
     setCurrentRouteId,
     setRoutePoints,
     setRouteGeometry,
-    setCurrentRouteName
+    setCurrentRouteName,
+    setRouteMode
 }) {
     const mapRef = useRef()
     const vectorSourceRef = useRef(new VectorSource())
     const { user, isAuthenticated, logout } = useAuth()
     const [authOpen, setAuthOpen] = useState(false)
     const [profileOpen, setProfileOpen] = useState(false)
+    const [routeDialogPos, setRouteDialogPos] = useState(null)
 
     function generateNumberedMarkerSVG(number) {
         const svg = `
@@ -114,6 +123,9 @@ export default function MapComponent({
             }
         
             const route = data.route;
+
+            const transportMode = route.transport_mode || "car";
+            setRouteMode?.(transportMode)
         
             setRoutePoints(route.points || []);
             setCurrentRouteId(route.id);
@@ -125,7 +137,7 @@ export default function MapComponent({
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                 points: route.points,
-                profile: "driving-car",
+                profile: getProfileForMode(transportMode)
                 }),
             });
         
@@ -137,6 +149,11 @@ export default function MapComponent({
             }
         
             setRouteGeometry(buildData.route.coordinates || []);
+            setRouteSummary?.({
+                distance: buildData.route.distance,
+                duration: buildData.route.duration,
+                transportMode,
+            })
         } catch (e) {
             console.error("loadRouteAndShowOnMap error", e);
             alert("Ошибка при загрузке маршрута");
@@ -160,6 +177,39 @@ export default function MapComponent({
             setCurrentRouteName("");
             setRoutePoints([]);
             setRouteGeometry(null);
+        }
+    }
+
+    function formatDistance(distanceMeters) {
+        const d = Number(distanceMeters) || 0
+
+        if (d < 1000) return `${Math.round(d)} м`
+
+        return `${(d / 1000).toFixed(1)} км`
+    }
+      
+    function formatDuration(durationSeconds) {
+        const s = Number(durationSeconds) || 0
+        const totalMinutes = Math.round(s / 60)
+        const hours = Math.floor(totalMinutes / 60)
+        const minutes = totalMinutes % 60
+
+        if (hours > 0) return `${hours} ч ${minutes} мин`
+
+        return `${minutes} мин`
+    }
+
+    function getTransportIcon(modeKey) {
+        switch (modeKey) {
+            case "truck":
+                return truckSVG;
+            case "bike":
+                return bikeSVG;
+            case "walk":
+                return walkSVG;
+            case "car":
+            default:
+                return carSVG;
         }
     }
 
@@ -371,12 +421,115 @@ export default function MapComponent({
         vectorSourceRef.current.addFeature(routeFeature)
     }, [routeGeometry])
 
+    useEffect(() => { // Диалоговое окно с расстоянием и временем маршрута
+        if (!mapRef.current || !routeGeometry || routeGeometry.length === 0 || !routeSummary ) {
+            setRouteDialogPos(null)
+            return
+        }
+
+        let rafId = null
+      
+        const update = () => {
+            if (!mapRef.current) return
+
+            if (!routeGeometry?.length) return
+
+            if (!routeSummary) return
+
+            const mid = routeGeometry[Math.floor(routeGeometry.length / 2)]
+            if (!mid?.lon || !mid?.lat) {
+                setRouteDialogPos(null)
+                return
+            }
+
+            const pointCoords = (routePoints || []).filter((p) => p.lat && p.lon)
+            if (!pointCoords.length) {
+                setRouteDialogPos({ x: mapRef.current.getPixelFromCoordinate(fromLonLat([mid.lon, mid.lat]))[0], y: mapRef.current.getPixelFromCoordinate(fromLonLat([mid.lon, mid.lat]))[1] - 40 })
+                return
+            }
+
+            const midPx = mapRef.current.getPixelFromCoordinate(fromLonLat([mid.lon, mid.lat]))
+            if (!midPx) {
+                setRouteDialogPos(null)
+                return
+            }
+
+            const pointPixels = pointCoords.map((p) => {
+                const coords = fromLonLat([p.lon, p.lat])
+                return mapRef.current.getPixelFromCoordinate(coords)
+            })
+
+            const baseX = midPx[0]
+            const baseY = midPx[1]
+            const radius = 38
+            const step = 28
+            const collidesAt = (x, y) => {
+                return pointPixels.some(([px, py]) => {
+                    if (typeof px !== "number" || typeof py !== "number") return false
+                    return Math.hypot(px - x, py - y) < radius
+                })
+            }
+
+            const offsetsUp = [-40, -40 - step, -40 - 2 * step, -40 - 3 * step]
+            const offsetsDown = [40, 40 + step, 40 + 2 * step, 40 + 3 * step]
+            const candidates = [
+                ...offsetsUp.map((dy) => ({ x: baseX, y: baseY + dy })),
+                ...offsetsDown.map((dy) => ({ x: baseX, y: baseY + dy })),
+            ]
+            const best = candidates.find((c) => !collidesAt(c.x, c.y)) || candidates[0]
+
+            setRouteDialogPos(best)
+        }
+
+        const handler = () => {
+            if (rafId) cancelAnimationFrame(rafId)
+            rafId = requestAnimationFrame(update)
+        }
+        
+        mapRef.current.on("postrender", handler)
+        
+        update()
+        return () => {
+            mapRef.current.un("postrender", handler)
+            if (rafId) cancelAnimationFrame(rafId)
+        }
+    }, [routeGeometry, routePoints, routeSummary])
+
     return (
         <div className={styles.root}>
             <div
                 ref={mapRef}
                 className={styles.mapCanvas}
             />
+
+            {routeSummary && routeDialogPos && (
+                <div
+                    className={styles.routeInfoDialog}
+                    style={{ left: routeDialogPos.x, top: routeDialogPos.y }}
+                >
+                    <div className={styles.routeInfoModeIcon}>
+                        <img
+                            className={styles.routeInfoModeImg}
+                            src={getTransportIcon(routeSummary.transportMode)}
+                            alt=""
+                        />
+                    </div>
+
+                    <div className={styles.routeInfoTitle}>Маршрут</div>
+                    <div className={styles.routeInfoRow}>
+                        <span className={styles.routeInfoLabel}>Расстояние</span>
+                        <span className={styles.routeInfoValue}>
+                            {formatDistance(routeSummary.distance)}
+                        </span>
+                    </div>
+                    <div className={styles.routeInfoRow}>
+                        <span className={styles.routeInfoLabel}>Время</span>
+                        <span className={styles.routeInfoValue}>
+                            {formatDuration(routeSummary.duration)}
+                        </span>
+                    </div>
+                </div>
+            )}
 
             {/* Кнопка профиля */}
             <div className={styles.toolbar}>

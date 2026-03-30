@@ -1,6 +1,10 @@
 import { useAuth } from "../context/AuthContext";
 import { useEffect, useState } from "react";
 import styles from "../styles/ProfilePage.module.css";
+import carSVG from "../assets/car.svg";
+import truckSVG from "../assets/truck.svg";
+import bikeSVG from "../assets/bike.svg";
+import walkSVG from "../assets/walk.svg";
 
 export default function ProfilePage({ 
   onClose,
@@ -13,6 +17,20 @@ export default function ProfilePage({
   const [error, setError] = useState("")
 
   if (!user) return null;
+
+  function getTransportIcon(modeKey) {
+    switch (modeKey) {
+      case "truck":
+        return truckSVG;
+      case "bike":
+        return bikeSVG;
+      case "walk":
+        return walkSVG;
+      case "car":
+      default:
+        return carSVG;
+    }
+  }
 
   useEffect(() => {
     async function loadRoutes() {
@@ -75,7 +93,16 @@ export default function ProfilePage({
                 key={route.id}
                 className={styles.routeCard}
               >
-                <div className={styles.routeName}>{route.name}</div>
+                <div className={styles.routeTitle}>
+                  <div className={styles.routeName} title={route.name}>{route.name}</div>
+                  <div className={styles.routeInfoModeIcon}>
+                    <img
+                      className={styles.routeInfoModeImg}
+                      src={getTransportIcon(route.transport_mode)}
+                      alt=""
+                    />
+                  </div>
+                </div>
                 <div className={styles.routeDate}>
                   {new Date(route.created_at).toLocaleString()}
                 </div>

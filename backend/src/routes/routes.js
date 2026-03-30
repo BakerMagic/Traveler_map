@@ -37,17 +37,21 @@ router.post("/", async (req, res) => {
 
 router.post("/save", requireAuth, async (req, res) => {
     try {
-        const { name, points } = req.body;
+        const { name, points, transportMode } = req.body;
 
         if (!name || !points || !Array.isArray(points) || points.length < 2) {
             return res.status(400).json({ error: "Нужно имя и минимум 2 точки" });
         }
 
+        const normalizedTransportMode = ["car", "truck", "bike", "walk"].includes(transportMode)
+            ? transportMode
+            : "car";
+
         const id = uuidv4();
         await pool.query(
-            `INSERT INTO routes (id, profile_id, name, points)
-            VALUES ($1, $2, $3, $4)`,
-            [id, req.user.id, name, JSON.stringify(points)]
+            `INSERT INTO routes (id, profile_id, name, points, transport_mode)
+            VALUES ($1, $2, $3, $4, $5)`,
+            [id, req.user.id, name, JSON.stringify(points), normalizedTransportMode]
         );
 
         res.status(201).json({ id, name });
@@ -60,7 +64,7 @@ router.post("/save", requireAuth, async (req, res) => {
 router.get("/list", requireAuth, async (req, res) => {
     try {
         const result = await pool.query(
-            `SELECT id, name, created_at
+            `SELECT id, name, transport_mode, created_at
             FROM routes
             WHERE profile_id = $1
             ORDER BY created_at DESC`,
@@ -78,7 +82,7 @@ router.get("/:id", requireAuth, async (req, res) => {
         const { id } = req.params;
     
         const result = await pool.query(
-            `SELECT id, name, points, created_at
+            `SELECT id, name, points, transport_mode, created_at
             FROM routes
             WHERE id = $1 AND profile_id = $2`,
             [id, req.user.id]
@@ -98,19 +102,24 @@ router.get("/:id", requireAuth, async (req, res) => {
 router.put("/:id", requireAuth, async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, points } = req.body;
+        const { name, points, transportMode } = req.body;
     
         if (!points || !Array.isArray(points) || points.length < 2) {
             return res.status(400).json({ error: "Нужно минимум 2 точки" });
         }
+
+        const normalizedTransportMode = ["car", "truck", "bike", "walk"].includes(transportMode)
+            ? transportMode
+            : "car";
     
         const result = await pool.query(
             `UPDATE routes
             SET name = COALESCE($1, name),
-                points = $2
+                points = $2,
+                transport_mode = $5
             WHERE id = $3 AND profile_id = $4
-            RETURNING id, name, created_at`,
-            [name || null, JSON.stringify(points), id, req.user.id]
+            RETURNING id, name, created_at, transport_mode`,
+            [name || null, JSON.stringify(points), id, req.user.id, normalizedTransportMode]
         );
     
         if (result.rowCount === 0) {
