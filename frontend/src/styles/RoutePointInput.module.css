@@ -1,5 +1,133 @@
 .root {
-  margin-bottom: 20px;
+  width: 100%;
+  margin-bottom: 12px;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  box-sizing: border-box;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.indexBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  height: 26px;
+  padding: 0 8px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  background: rgba(100, 108, 255, 0.22);
+  color: #aeb4ff;
+}
+
+.spacer {
+  flex: 1;
+  min-width: 8px;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.iconButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.75);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.iconButton:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.iconButton:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.iconButtonDanger:hover:not(:disabled) {
+  color: #f87171;
+  background: rgba(248, 113, 113, 0.12);
+}
+
+.loupeIcon {
+  width: 18px;
+  height: 18px;
+}
+
+.crossIcon {
+  width: 14px;
+  height: 14px;
+  display: block;
+}
+
+.inputRow {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+  width: 100%;
+}
+
+.field {
+  flex: 1;
+  min-width: 0;
+}
+
+.input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(0, 0, 0, 0.25);
+  color: inherit;
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.input::placeholder {
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.input:focus {
+  border-color: rgba(100, 108, 255, 0.65);
+  box-shadow: 0 0 0 2px rgba(100, 108, 255, 0.2);
+}
+
+.searchTrigger {
+  flex-shrink: 0;
+  align-self: stretch;
+  min-width: 44px;
+}
+
+.results {
+  margin-top: 10px;
+  max-height: 220px;
+  overflow-y: auto;
+  padding-right: 2px;
 }
 
 .resultBtn {
@@ -7,17 +135,33 @@
   width: 100%;
   text-align: left;
   margin-bottom: 8px;
-  padding: 4px 6px;
-  border-radius: 6px;
-  border: 1px solid #ddd;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.2);
+  color: inherit;
   cursor: pointer;
+  font-family: inherit;
+  transition: background 0.12s, border-color 0.12s;
+}
+
+.resultBtn:last-child {
+  margin-bottom: 0;
+}
+
+.resultBtn:hover {
+  background: rgba(100, 108, 255, 0.12);
+  border-color: rgba(100, 108, 255, 0.35);
 }
 
 .resultTitle {
-  font-size: 14px;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.35;
 }
 
 .resultKind {
   font-size: 11px;
-  color: #777;
+  color: rgba(255, 255, 255, 0.45);
+  margin-top: 2px;
 }

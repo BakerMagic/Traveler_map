@@ -1,6 +1,12 @@
+import { useState } from "react"
 import RoutePointInput from "./RoutePointInput"
 import { useAuth } from "../context/AuthContext";
 import styles from "../styles/RouteBuilder.module.css";
+import { ROUTE_MODES, DEFAULT_ROUTE_MODE, getProfileForMode } from "../utils/routeProfiles";
+import carSVG from "../assets/car.svg"
+import truckSVG from "../assets/truck.svg"
+import bikeSVG from "../assets/bike.svg"
+import walkSVG from "../assets/walk.svg"
 
 export default function RouteBuilder({
     routePoints,
@@ -13,12 +19,13 @@ export default function RouteBuilder({
     setIsRouteBuilderActive
 }) {
     const { isAuthenticated } = useAuth()
+    const [routeMode, setRouteMode] = useState(DEFAULT_ROUTE_MODE);
 
     const addPoint = () => {
         setRoutePoints(prev => [
             ...prev,
             {
-                id: Date.now(),
+                id: `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
                 name: "",
                 lat: null,
                 lon: null
@@ -37,7 +44,10 @@ export default function RouteBuilder({
         const response = await fetch("http://localhost:4000/api/routes", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ points, profile: "driving-car" })
+            body: JSON.stringify({ 
+                points,
+                profile: getProfileForMode(routeMode)
+            })
         })
 
         if (!response.ok) {
@@ -152,9 +162,73 @@ export default function RouteBuilder({
         setCurrentRouteName && setCurrentRouteName("")
     }
 
+    const movePoint = (index, delta) => {
+        const newIndex = index + delta
+        if (newIndex < 0 || newIndex >= routePoints.length) return
+        setRoutePoints((prev) => {
+        const next = [...prev]
+        const [removed] = next.splice(index, 1)
+        next.splice(newIndex, 0, removed)
+        return next
+        })
+    }
+    
+    const clearOrRemovePoint = (index) => {
+        setRoutePoints((prev) => {
+        if (prev.length <= 2) {
+            return prev.map((p, i) =>
+            i === index ? { ...p, name: "", lat: null, lon: null } : p
+            )
+        }
+        return prev.filter((_, i) => i !== index)
+        })
+    }
+
+    function ModeIcon({ mode }) {
+        switch (mode) {
+            case "car":
+                return (
+                    <img className={styles.SVGIcon} src={carSVG}/>
+                );
+            case "truck":
+                return (
+                    <img className={styles.SVGIcon} src={truckSVG}/>
+                );
+            case "bike":
+                return (
+                    <img className={styles.SVGIcon} src={bikeSVG}/>
+                );
+            case "walk":
+                return (
+                    <img className={styles.SVGIcon} src={walkSVG}/>
+                );
+            default:
+                return null;
+        }
+    }
+
     return (
-        <>
-            <div>
+        <div className={styles.routeBuilder}>
+            <div className={styles.profileToolbarWrap}>
+                <span className={styles.profileToolbarLabel}>Как доберётесь</span>
+                <div className={styles.profileToolbar} role="group" aria-label="Способ передвижения">
+                    {ROUTE_MODES.map(({ key, label }) => (
+                        <button
+                            type="button"
+                            key={key}
+                            aria-label={label}
+                            aria-pressed={routeMode === key}
+                            className={`${styles.profileModeBtn} ${routeMode === key ? styles.profileModeBtnActive : ""}`}
+                            onClick={() => setRouteMode(key)}
+                        >
+                            <span className={styles.profileModeIcon}>
+                                <ModeIcon mode={key} />
+                            </span>
+                        </button>
+                    ))}
+                </div>
+            </div>
+            <div className={styles.pointsList}>
                 {routePoints.map((point, index) => (
                     <RoutePointInput
                         key={point.id}
@@ -162,13 +236,21 @@ export default function RouteBuilder({
                         index={index}
                         routePoints={routePoints}
                         setRoutePoints={setRoutePoints}
+                        totalCount={routePoints.length}
+                        onClearOrRemove={() => clearOrRemovePoint(index)}
+                        onMoveUp={() => movePoint(index, -1)}
+                        onMoveDown={() => movePoint(index, 1)}
+                        canMoveUp={index > 0}
+                        canMoveDown={index < routePoints.length - 1}
                     />
                 ))}
             </div>
 
-            <button onClick={buildRoute}>
-                Построить
-            </button>
+            <div className={styles.buildRow}>
+                <button type="button" className={styles.buildButton} onClick={buildRoute}>
+                    Построить
+                </button>
+            </div>
 
             <div className={styles.actionsRow}>
                 <button
@@ -187,19 +269,13 @@ export default function RouteBuilder({
             </div>
 
             <div className={styles.footerRow}>
-                <p
-                    className={`${styles.textAction} addPointBtn`}
-                    onClick={addPoint} 
-                >
+                <p className={`${styles.textAction} addPointBtn`} onClick={addPoint}>
                     + Добавить точку
                 </p>
-                <p
-                    className={styles.textAction}
-                    onClick={() => resetRouteBuilderState()}
-                >
+                <p className={styles.textAction} onClick={() => resetRouteBuilderState()}>
                     Сбросить
                 </p>
             </div>
-        </>
+        </div>
     )
 }

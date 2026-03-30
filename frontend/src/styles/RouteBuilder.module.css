@@ -1,24 +1,168 @@
+.routeBuilder {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.profileToolbarWrap {
+  margin-bottom: 12px;
+  width: 100%;
+}
+
+.profileToolbarLabel {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  margin-bottom: 8px;
+  color: rgba(255, 255, 255, 0.55);
+  text-transform: uppercase;
+}
+
+.profileToolbar {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 6px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  box-sizing: border-box;
+}
+
+.profileModeBtn {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  margin: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-radius: 999px;
+  color: rgba(255, 255, 255, 0.45);
+  transition: color 0.15s, background 0.15s, box-shadow 0.15s;
+}
+
+.profileModeBtn:hover {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.profileModeBtnActive {
+  color: #fff;
+  background: linear-gradient(145deg, #6366f1 0%, #4f46e5 100%);
+  box-shadow: 0 2px 10px rgba(79, 70, 229, 0.45);
+}
+
+.profileModeBtn:focus-visible {
+  outline: 2px solid rgba(99, 102, 241, 0.85);
+  outline-offset: 2px;
+}
+
+.profileModeIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+}
+
+.SVGIcon {
+  width: 20px;
+  height: 20px;
+}
+
+.pointsList {
+  width: 100%;
+}
+
+.buildRow {
+  margin-top: 14px;
+  width: 100%;
+}
+
+.buildButton {
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  color: #fff;
+  box-shadow: 0 2px 12px rgba(79, 70, 229, 0.35);
+  transition: filter 0.15s, transform 0.1s;
+}
+
+.buildButton:hover {
+  filter: brightness(1.06);
+}
+
+.buildButton:active {
+  transform: scale(0.99);
+}
+
 .actionsRow {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
-  margin-top: 8px;
+  margin-top: 12px;
+  width: 100%;
+}
+
+.actionsRow button {
+  flex: 1;
+  min-width: 120px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+  color: inherit;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.actionsRow button:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.actionsRow button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 .footerRow {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 8px;
+  margin-top: 12px;
+  width: 100%;
+  gap: 8px;
 }
 
 .textAction {
-  display: inline-block;
   margin: 0;
-  font-size: 14px;
-  color: #777;
+  padding: 6px 0;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.55);
   cursor: pointer;
+  background: none;
+  border: none;
+  font-family: inherit;
+  text-align: left;
 }
 
 .textAction:hover {
-  color: #999;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.footerRow .textAction:last-child {
+  text-align: right;
 }

@@ -1,7 +1,20 @@
+.sidebar {
+  width: 100%;
+  box-sizing: border-box;
+}
+
 .searchRow {
   display: flex;
   gap: 8px;
   margin-bottom: 8px;
+  align-items: stretch;
+  width: 100%;
+}
+
+.searchRow input[type="text"] {
+  flex: 1;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .iconButton {
@@ -12,7 +25,9 @@
 }
 
 .routeBuilderWrap {
-  margin-top: 8px;
+  margin-top: 12px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .results {

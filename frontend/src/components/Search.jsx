@@ -77,7 +77,7 @@ export default function Search({
     }
 
     return (
-        <div className="sidebar">
+        <div className={styles.sidebar}>
             <div className={styles.searchRow}>
                 <input 
                     type="text"
