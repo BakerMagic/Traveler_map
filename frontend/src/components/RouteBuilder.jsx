@@ -202,7 +202,7 @@ export default function RouteBuilder({
                 );
             case "truck":
                 return (
-                    <img className={styles.SVGIcon} src={truckSVG}/>
+                    <img className={styles.SVGIcon} src={truckSVG} style={{opacity: "0.45", cursor: "not-allowed", pointerEvents: "none"}}/>
                 );
             case "bike":
                 return (
@@ -230,6 +230,10 @@ export default function RouteBuilder({
                             aria-pressed={routeMode === key}
                             className={`${styles.profileModeBtn} ${routeMode === key ? styles.profileModeBtnActive : ""}`}
                             onClick={() => setRouteMode(key)}
+
+                            // временно отключил truck, так как на сайте ORS технические неполадки
+                            disabled={key === 'truck'}
+                            style={key === 'truck' ? {cursor: "not-allowed"} : {}}
                         >
                             <span className={styles.profileModeIcon}>
                                 <ModeIcon mode={key} />
