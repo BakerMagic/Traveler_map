@@ -14,6 +14,7 @@ function App() {
   const [currentRouteId, setCurrentRouteId] = useState(null)
   const [currentRouteName, setCurrentRouteName] = useState("")
   const [routeMode, setRouteMode] = useState(DEFAULT_ROUTE_MODE)
+  const [selectedEvent, setSelectedEvent] = useState(null)
 
   return (
     <div className={styles.layout}>
@@ -21,7 +22,9 @@ function App() {
       {/* Левая панель*/}
       <Sidebar 
         weather={weather}
+        setWeather={setWeather}
         forecast={forecast}
+        setForecast={setForecast}
         location={location}
         setLocation={setLocation}
         routePoints={routePoints}
@@ -34,6 +37,7 @@ function App() {
         setCurrentRouteName={setCurrentRouteName}
         routeMode={routeMode}
         setRouteMode={setRouteMode}
+        setSelectedEvent={setSelectedEvent}
       />
 
       {/* Карта */}
@@ -52,6 +56,8 @@ function App() {
         setRouteGeometry={setRouteGeometry}
         setCurrentRouteName={setCurrentRouteName}
         setRouteMode={setRouteMode}
+        selectedEvent={selectedEvent}
+        setSelectedEvent={setSelectedEvent}
       />
     </div>
   )

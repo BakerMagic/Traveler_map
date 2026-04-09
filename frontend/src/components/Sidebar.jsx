@@ -5,7 +5,9 @@ import styles from "../styles/Sidebar.module.css"
 
 export default function Sidebar({ 
   weather,
+  setWeather,
   forecast,
+  setForecast,
   location, 
   setLocation, 
   routePoints, 
@@ -17,11 +19,14 @@ export default function Sidebar({
   currentRouteName,
   setCurrentRouteName,
   routeMode,
-  setRouteMode
+  setRouteMode,
+  setSelectedEvent
 }) {
   return (
       <div className={styles.root}>
           <Search 
+            setWeather={setWeather}
+            setForecast={setForecast}
             setLocation={setLocation}
             routePoints={routePoints}
             setRoutePoints={setRoutePoints}
@@ -38,7 +43,11 @@ export default function Sidebar({
             weather={weather}
             forecast={forecast}
           />
-          <Events location={location} setLocation={setLocation}/>
+          <Events 
+            location={location}
+            setLocation={setLocation}
+            setSelectedEvent={setSelectedEvent}
+          />
       </div>
   )
 }

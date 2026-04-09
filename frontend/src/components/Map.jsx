@@ -4,7 +4,7 @@ import View from "ol/View"
 import TileLayer from "ol/layer/Tile"
 import OSM from "ol/source/OSM"
 import VectorLayer from "ol/layer/Vector"
-import VectorSource from "ol/source/Vector"
+import VectorSource, { VectorSourceEvent } from "ol/source/Vector"
 import Feature from "ol/Feature"
 import Point from "ol/geom/Point"
 import { Style, Icon, Stroke, Fill } from "ol/style"
@@ -37,7 +37,9 @@ export default function MapComponent({
     setRoutePoints,
     setRouteGeometry,
     setCurrentRouteName,
-    setRouteMode
+    setRouteMode,
+    selectedEvent,
+    setSelectedEvent
 }) {
     const mapRef = useRef()
     const vectorSourceRef = useRef(new VectorSource())
@@ -45,6 +47,8 @@ export default function MapComponent({
     const [authOpen, setAuthOpen] = useState(false)
     const [profileOpen, setProfileOpen] = useState(false)
     const [routeDialogPos, setRouteDialogPos] = useState(null)
+    const [activeEvent, setActiveEvent] = useState(null)
+    const [eventDialogPos, setEventDialogPos] = useState(null)
 
     function generateNumberedMarkerSVG(number) {
         const svg = `
@@ -84,6 +88,31 @@ export default function MapComponent({
         )
     
         return marker
+    }
+
+    function createEventMarkerFeature(eventItem) {
+        const svg = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="42" height="92">
+                <circle cx="21" cy="21" r="15" fill="#A855F7"/>
+                <path d="M 11 32 Q 19 38 21 46 Q 23 38 31 32" fill="#A855F7"/>
+                <circle cx="21" cy="21" r="6" fill="white"/>
+            </svg>
+        `
+
+        const feature = new Feature({
+            geometry: new Point(fromLonLat([eventItem.lon, eventItem.lat])),
+        })
+
+        feature.set("type", "eventMarker")
+        feature.set("eventData", eventItem)
+        feature.setStyle(new Style({
+            image: new Icon({
+                src: "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg),
+                scale: 1,
+            }),
+        }))
+
+        return feature
     }
     
     async function getWeather(lat, lon, setWeather, setForecast) {
@@ -238,6 +267,14 @@ export default function MapComponent({
             const features = vectorSourceRef.current.getFeatures()
 
             const featureAtPixel = map.forEachFeatureAtPixel(event.pixel, (f) => f)
+
+            if (featureAtPixel?.get("type") === "eventMarker") {
+                const eventData = featureAtPixel.get("eventData")
+                
+                setActiveEvent(eventData)
+
+                return
+            }
 
             // Проверка клика по пользовательскому маркеру
             if (featureAtPixel?.get("type") === "searchMarker") {
@@ -509,6 +546,106 @@ export default function MapComponent({
         }
     }, [routeGeometry, routePoints, routeSummary])
 
+    useEffect(() => { // Мероприятия
+        if (!mapRef.current) return
+
+        console.log(selectedEvent)
+        
+        const features = vectorSourceRef.current.getFeatures();
+
+        features
+            .filter((f) => f.get("type") === "eventMarker")
+            .forEach((f) => vectorSourceRef.current.removeFeature(f))
+
+        if (!selectedEvent) return
+
+        const marker = createEventMarkerFeature(selectedEvent)
+        vectorSourceRef.current.addFeature(marker)
+
+        mapRef.current.getView().animate({
+            center: fromLonLat([selectedEvent.lon, selectedEvent.lat]),
+            duration: 600
+        })
+
+        setActiveEvent(selectedEvent)
+    }, [selectedEvent])
+
+    useEffect(() => { // Позиционирование диалога мероприятия
+        if (!mapRef.current || !activeEvent) {
+            setEventDialogPos(null)
+            return
+        }
+    
+        let rafId = null
+    
+        const update = () => {
+            if (!mapRef.current || !activeEvent) return
+    
+            const map = mapRef.current
+            const size = map.getSize()
+            if (!size) return
+    
+            const [mapWidth, mapHeight] = size
+            const px = map.getPixelFromCoordinate(
+                fromLonLat([activeEvent.lon, activeEvent.lat])
+            )
+            if (!px) {
+                setEventDialogPos(null)
+                return
+            }
+    
+            const markerX = px[0]
+            const markerY = px[1]
+    
+            // примерные размеры диалога (можно подправить под реальный CSS)
+            const dialogW = 260
+            const dialogH = 135
+            const pad = 12
+    
+            // сначала пробуем над маркером
+            let x = markerX
+            let y = markerY - 46
+            let placement = "top"
+    
+            // если сверху не помещается — ставим под маркер
+            if (y - dialogH < pad) {
+                y = markerY + 54
+                placement = "bottom"
+            }
+    
+            // clamp по горизонтали (чтобы не выходил за карту)
+            const half = dialogW / 2
+            if (x < half + pad) x = half + pad
+            if (x > mapWidth - half - pad) x = mapWidth - half - pad
+    
+            // clamp по вертикали
+            if (placement === "top") {
+                if (y < dialogH + pad) y = dialogH + pad
+                if (y > mapHeight - pad) y = mapHeight - pad
+            } else {
+                if (y < pad) y = pad
+                if (y > mapHeight - dialogH - pad) y = mapHeight - dialogH - pad
+            }
+    
+            setEventDialogPos({ x, y, placement })
+        }
+    
+        const onRender = () => {
+            if (rafId) cancelAnimationFrame(rafId)
+            rafId = requestAnimationFrame(update)
+        }
+    
+        mapRef.current.on("postrender", onRender)
+        update()
+    
+        return () => {
+            if (mapRef.current) {
+                mapRef.current.un("postrender", onRender)
+            }
+            if (rafId) cancelAnimationFrame(rafId)
+        }
+    }, [activeEvent])
+
     return (
         <div className={styles.root}>
             <div
@@ -542,6 +679,38 @@ export default function MapComponent({
                             {formatDuration(routeSummary.duration)}
                         </span>
                     </div>
+                </div>
+            )}
+
+            {activeEvent && eventDialogPos && (
+                <div
+                    className={`${styles.eventDialog} ${
+                        eventDialogPos?.placement === "bottom" ? styles.eventDialogBottom : styles.eventDialogTop
+                    }`}
+                    style={{ left: eventDialogPos.x, top: eventDialogPos.y }}
+                >
+                    <button className={styles.eventDialogClose} onClick={() => setActiveEvent(null)}>×</button>
+                    <div className={styles.eventDialogTitle}>
+                        {activeEvent.name}
+                    </div>
+                    <div className={styles.eventDialogMeta}>
+                        {activeEvent.date} {activeEvent.time ? `в ${activeEvent.time}` : ""}
+                    </div>
+                    <div className={styles.eventDialogVenue}>
+                        {activeEvent.venueName && `${activeEvent.venueName}, `}
+                        {activeEvent.address}
+                        {activeEvent.city && `, ${activeEvent.city}`}
+                    </div>
+                    {activeEvent.url && (
+                        <a
+                            href={activeEvent.url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className={styles.eventDialogLink}
+                        >
+                            Сайт события
+                        </a>
+                    )}
                 </div>
             )}
 

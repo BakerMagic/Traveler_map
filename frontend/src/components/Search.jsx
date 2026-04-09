@@ -8,6 +8,8 @@ import styles from "../styles/Search.module.css"
 import { DEFAULT_ROUTE_MODE } from "../utils/routeProfiles"
 
 export default function Search({
+    setWeather,
+    setForecast,
     setLocation,
     routePoints, 
     setRoutePoints,
@@ -62,6 +64,9 @@ export default function Search({
     const handleClearAll = () => {
         setQuery("")
         setResults([])
+
+        setWeather && setWeather(null)
+        setForecast && setForecast(null)
 
         setLocation && setLocation(null)
 

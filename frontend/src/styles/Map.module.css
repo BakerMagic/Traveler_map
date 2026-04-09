@@ -124,3 +124,94 @@
   cursor: pointer;
   backdrop-filter: blur(6px);
 }
+
+.eventDialog {
+  position: absolute;
+  z-index: 1700;
+  width: 260px;
+  max-width: min(260px, calc(100vw - 24px));
+  pointer-events: auto;
+  border-radius: 12px;
+  padding: 12px 12px 10px;
+  background: rgba(25, 25, 28, 0.95);
+  color: #f4f4f5;
+  border: 1px solid rgba(168, 85, 247, 0.45);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(8px);
+  box-sizing: border-box;
+}
+
+.eventDialogTop {
+  transform: translate(-50%, -100%);
+}
+
+.eventDialogBottom {
+  transform: translate(-50%, 0%);
+}
+
+.eventDialogClose {
+  position: absolute;
+  right: 8px;
+  top: 6px;
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #bbb;
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.eventDialogClose:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+.eventDialogTitle {
+  margin-right: 28px; /* место под крестик */
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: #fafafa;
+}
+
+.eventDialogMeta {
+  margin-top: 6px;
+  font-size: 12px;
+  color: rgba(244, 244, 245, 0.8);
+}
+
+.eventDialogVenue {
+  margin-top: 6px;
+  font-size: 12px;
+  line-height: 1.35;
+  color: rgba(244, 244, 245, 0.72);
+}
+
+.eventDialogDescription {
+  margin-top: 8px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: rgba(244, 244, 245, 0.84);
+  max-height: 68px;
+  overflow: auto;
+  padding-right: 2px;
+}
+
+.eventDialogLink {
+  margin-top: 10px;
+  display: inline-block;
+  font-size: 12px;
+  color: #d8b4fe;
+  text-decoration: none;
+}
+
+.eventDialogLink:hover {
+  color: #f3e8ff;
+  text-decoration: underline;
+}

@@ -1,16 +1,28 @@
 import { useState, useEffect } from "react"
 import styles from "../styles/Events.module.css"
 
-export default function Events({ location, setLocation }) {
+export default function Events({
+    location,
+    setLocation,
+    setSelectedEvent
+}) {
     const [events, setEvents] = useState([])
     const [eventsLoading, setEventsLoading] = useState(false)
     const [eventsError, setEventsError] = useState(null)
 
-    const handlePick = (lat, lon) => {
-        setLocation({
-            lon: Number(lon),
-            lat: Number(lat),
-            type: "tourism",
+    const handleShowOnMap = (event) => {
+        setSelectedEvent?.({
+            id: event.id,
+            name: event.name,
+            lat: Number(event.lat),
+            lon: Number(event.lon),
+            date: event.date,
+            time: event.time,
+            venueName: event.venueName,
+            address: event.address,
+            city: event.city,
+            country: event.country,
+            url: event.url
         })
     }
 
@@ -70,8 +82,8 @@ export default function Events({ location, setLocation }) {
                             className={styles.eventCard}>
                                 <button
                                     type="button"
-                                    onClick={() => handlePick(event.lat, event.lon)}
-                                    className={styles.eventPickBtn}
+                                    onClick={() => handleShowOnMap(event)}
+                                    className={styles.showOnMapBtn}
                                 >
                                     <div className={styles.eventName}>
                                         {event.name}
