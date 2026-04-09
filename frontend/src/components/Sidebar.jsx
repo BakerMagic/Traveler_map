@@ -6,8 +6,8 @@ import styles from "../styles/Sidebar.module.css"
 export default function Sidebar({ 
   weather,
   forecast,
-  setLocation, 
   location, 
+  setLocation, 
   routePoints, 
   setRoutePoints,
   setRouteGeometry,
@@ -34,7 +34,10 @@ export default function Sidebar({
             routeMode={routeMode}
             setRouteMode={setRouteMode}
           />
-          <WeatherPanel weather={weather} forecast={forecast} />
+          <WeatherPanel 
+            weather={weather}
+            forecast={forecast}
+          />
           <Events location={location} setLocation={setLocation}/>
       </div>
   )

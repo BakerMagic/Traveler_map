@@ -1,59 +1,168 @@
 .root {
-  position: relative;
+  margin-top: 14px;
 }
 
-.forecastToggle {
+.emptyState {
+  margin-top: 12px;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.currentCard {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 14px;
+  padding: 14px;
+}
+
+.currentHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.title {
+  margin: 0;
+  font-size: 18px;
+}
+
+.city {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.currentMain {
   margin-top: 8px;
 }
 
-.forecastPanel {
-  position: fixed;
-  top: 0;
-  width: 375px;
-  height: 100vh;
-  background: #242424;
-  box-shadow: 2px 0 10px regb(0, 0, 0, 0.2);
-  padding: 16px;
-  transition: left 0.3s ease;
-  overflow-y: auto;
-  z-index: 1000;
+.currentTemp {
+  font-size: 34px;
+  font-weight: 700;
+  line-height: 1;
 }
 
-.forecastPanelClosed {
-  left: -450px;
+.currentDesc {
+  margin-top: 4px;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.8);
 }
 
-.forecastPanelOpen {
-  left: 0;
+.currentMeta {
+  margin-top: 10px;
+  display: grid;
+  gap: 4px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.8);
 }
 
-.forecastHeader {
+.forecastToggle {
+  margin-top: 12px;
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid rgba(100, 108, 255, 0.4);
+  background: rgba(100, 108, 255, 0.2);
+  color: #d9dcff;
+  padding: 9px 10px;
+  font-size: 13px;
+}
+
+.forecastSection {
+  margin-top: 10px;
+}
+
+.forecastTitle {
+  margin: 10px 0 8px;
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.daysList {
+  display: grid;
+  gap: 8px;
+}
+
+.dayCard {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.daySummaryBtn {
+  width: 100%;
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  width: 100%;
+  gap: 8px;
+  padding: 10px 12px;
+  border: none;
+  background: transparent;
+  color: inherit;
+  text-align: left;
 }
 
-.closeIcon {
-  display: flex;
-  justify-content: flex-end;
-  align-items: flex-end;
-  cursor: pointer;
-  text-align: right;
-  stroke: #777;
+.daySummaryLeft {
+  min-width: 0;
 }
 
-.closeIcon:hover {
-  stroke: #bbb;
+.dayLabel {
+  font-size: 14px;
+  font-weight: 600;
 }
 
-.forecastItem {
-  margin-bottom: 12px;
-  border-bottom: 1px solid #eee;
-  padding: 8px;
-}
-
-.forecastItemTime {
+.dayDesc {
+  margin-top: 2px;
   font-size: 12px;
-  color: #555;
+  color: rgba(255, 255, 255, 0.65);
+  text-transform: capitalize;
+}
+
+.daySummaryRight {
+  text-align: right;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.dayTemp {
+  color: #f1f5ff;
+}
+
+.nightTemp {
+  margin-top: 2px;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.details3h {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 8px 10px;
+  display: grid;
+  gap: 6px;
+}
+
+.detailRow {
+  display: grid;
+  grid-template-columns: 52px 46px 1fr 58px;
+  gap: 8px;
+  align-items: center;
+  font-size: 12px;
+}
+
+.detailTime {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.detailTemp {
+  font-weight: 600;
+}
+
+.detailDesc {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-transform: capitalize;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.detailWind {
+  text-align: right;
+  color: rgba(255, 255, 255, 0.7);
 }

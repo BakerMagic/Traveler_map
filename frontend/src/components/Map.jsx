@@ -13,15 +13,15 @@ import "ol/ol.css"
 import { getZoomByLocation } from '../utils/zoomMap'
 import { LineString } from "ol/geom"
 import GeoJSON from "ol/format/GeoJSON"
-import { useAuth } from "../context/AuthContext";
-import AuthModal from "./AuthModal";
+import { useAuth } from "../context/AuthContext"
+import AuthModal from "./AuthModal"
 import ProfilePage from "./ProfilePage"
 import styles from "../styles/Map.module.css"
-import { getProfileForMode } from "../utils/routeProfiles";
-import carSVG from "../assets/car.svg";
-import truckSVG from "../assets/truck.svg";
-import bikeSVG from "../assets/bike.svg";
-import walkSVG from "../assets/walk.svg";
+import { getProfileForMode } from "../utils/routeProfiles"
+import carSVG from "../assets/car.svg"
+import truckSVG from "../assets/truck.svg"
+import bikeSVG from "../assets/bike.svg"
+import walkSVG from "../assets/walk.svg"
 
 export default function MapComponent({
     setWeather,
@@ -115,21 +115,21 @@ export default function MapComponent({
         try {
             const res = await fetch(`http://localhost:4000/api/routes/${routeId}`, {
                 credentials: "include",
-            });
-            const data = await res.json().catch(() => ({}));
+            })
+            const data = await res.json().catch(() => ({}))
             if (!res.ok || !data.route) {
-                alert(data.error || "Не удалось загрузить маршрут");
-                return;
+                alert(data.error || "Не удалось загрузить маршрут")
+                return
             }
         
-            const route = data.route;
+            const route = data.route
 
-            const transportMode = route.transport_mode || "car";
+            const transportMode = route.transport_mode || "car"
             setRouteMode?.(transportMode)
         
-            setRoutePoints(route.points || []);
-            setCurrentRouteId(route.id);
-            setCurrentRouteName(route.name || "");
+            setRoutePoints(route.points || [])
+            setCurrentRouteId(route.id)
+            setCurrentRouteName(route.name || "")
         
             // Строим путь по этим точкам
             const buildRes = await fetch("http://localhost:4000/api/routes", {
@@ -139,24 +139,24 @@ export default function MapComponent({
                 points: route.points,
                 profile: getProfileForMode(transportMode)
                 }),
-            });
+            })
         
-            const buildData = await buildRes.json().catch(() => ({}));
+            const buildData = await buildRes.json().catch(() => ({}))
             if (!buildRes.ok || !buildData.route) {
-                console.error("Route build error:", buildRes.status, buildData.error);
-                alert(buildData.error || "Не удалось построить маршрут");
-                return;
+                console.error("Route build error:", buildRes.status, buildData.error)
+                alert(buildData.error || "Не удалось построить маршрут")
+                return
             }
         
-            setRouteGeometry(buildData.route.coordinates || []);
+            setRouteGeometry(buildData.route.coordinates || [])
             setRouteSummary?.({
                 distance: buildData.route.distance,
                 duration: buildData.route.duration,
                 transportMode,
             })
         } catch (e) {
-            console.error("loadRouteAndShowOnMap error", e);
-            alert("Ошибка при загрузке маршрута");
+            console.error("loadRouteAndShowOnMap error", e)
+            alert("Ошибка при загрузке маршрута")
         }
       }
       
@@ -164,19 +164,19 @@ export default function MapComponent({
         const res = await fetch(`http://localhost:4000/api/routes/${routeId}`, {
             method: "DELETE",
             credentials: "include",
-        });
+        })
         if (!res.ok && res.status !== 204) {
-            const data = await res.json().catch(() => ({}));
-            alert(data.error || "Не удалось удалить маршрут");
-            return;
+            const data = await res.json().catch(() => ({}))
+            alert(data.error || "Не удалось удалить маршрут")
+            return
         }
       
         // Если удаляем текущий редактируемый маршрут, то сбрасываем состояние
         if (currentRouteId === routeId) {
-            setCurrentRouteId(null);
-            setCurrentRouteName("");
-            setRoutePoints([]);
-            setRouteGeometry(null);
+            setCurrentRouteId(null)
+            setCurrentRouteName("")
+            setRoutePoints([])
+            setRouteGeometry(null)
         }
     }
 
@@ -202,14 +202,14 @@ export default function MapComponent({
     function getTransportIcon(modeKey) {
         switch (modeKey) {
             case "truck":
-                return truckSVG;
+                return truckSVG
             case "bike":
-                return bikeSVG;
+                return bikeSVG
             case "walk":
-                return walkSVG;
+                return walkSVG
             case "car":
             default:
-                return carSVG;
+                return carSVG
         }
     }
 
@@ -237,8 +237,20 @@ export default function MapComponent({
         map.on("click", async (event) => { // Обработчик клика на карте
             const features = vectorSourceRef.current.getFeatures()
 
-            // Приверка клика по маркеру маршрута
             const featureAtPixel = map.forEachFeatureAtPixel(event.pixel, (f) => f)
+
+            // Проверка клика по пользовательскому маркеру
+            if (featureAtPixel?.get("type") === "searchMarker") {
+                vectorSourceRef.current.removeFeature(featureAtPixel)
+
+                setLocation(null)
+                setWeather(null)
+                setForecast(null)
+
+                return
+            }
+            
+            // Приверка клика по маркеру маршрута
             const routePointData = featureAtPixel && featureAtPixel.get("routePoint")
             
             if (routePointData) {
@@ -297,6 +309,12 @@ export default function MapComponent({
 
             vectorSourceRef.current.addFeature(marker)
 
+            setLocation({
+                lat: lonlat[1],
+                lon: lonlat[0],
+                type: "searchMarker"
+            })
+
             // Запрос к OpenWeather
             getWeather(lonlat[1], lonlat[0], setWeather, setForecast)
         })
@@ -311,10 +329,6 @@ export default function MapComponent({
         features
             .filter(f => f.get("isSearchPolygon") || f.get("type") === "searchMarker")
             .forEach(f => vectorSourceRef.current.removeFeature(f))
-        
-        // features
-        //     .filter(f => )
-        //     .forEach(f => vectorSourceRef.current.removeFeature(f))
         
         if (location.polygon) {
             const format = new GeoJSON()

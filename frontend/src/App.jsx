@@ -13,7 +13,7 @@ function App() {
   const [routeSummary, setRouteSummary] = useState(null)
   const [currentRouteId, setCurrentRouteId] = useState(null)
   const [currentRouteName, setCurrentRouteName] = useState("")
-  const [routeMode, setRouteMode] = useState(DEFAULT_ROUTE_MODE);
+  const [routeMode, setRouteMode] = useState(DEFAULT_ROUTE_MODE)
 
   return (
     <div className={styles.layout}>
@@ -22,8 +22,8 @@ function App() {
       <Sidebar 
         weather={weather}
         forecast={forecast}
-        setLocation={setLocation}
         location={location}
+        setLocation={setLocation}
         routePoints={routePoints}
         setRoutePoints={setRoutePoints}
         setRouteGeometry={setRouteGeometry}
