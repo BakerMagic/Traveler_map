@@ -50,6 +50,32 @@ export default function MapComponent({
     const [activeEvent, setActiveEvent] = useState(null)
     const [eventDialogPos, setEventDialogPos] = useState(null)
 
+    const LARGE_PLACE_TYPES = new Set([
+        "country",
+        "state",
+        "region",
+        "county",
+        "city",
+        "town",
+        "village",
+        "hamlet",
+        "suburb",
+        "district",
+        "road",
+        "street",
+        "residential",
+        "highway",
+    ]);
+      
+    function getLocationKind(location) {
+        return location?.addresstype || location?.type || location?.class || "";
+    }
+      
+    function shouldFitByPolygon(location) {
+        if (!location?.polygon) return false;
+        return LARGE_PLACE_TYPES.has(getLocationKind(location));
+    }
+
     function generateNumberedMarkerSVG(number) {
         const svg = `
             <svg xmlns="http://www.w3.org/2000/svg" width="40" height="90">
@@ -349,7 +375,8 @@ export default function MapComponent({
             setLocation({
                 lat: lonlat[1],
                 lon: lonlat[0],
-                type: "searchMarker"
+                type: "searchMarker",
+                source: "userClick"
             })
 
             // Запрос к OpenWeather
@@ -367,10 +394,12 @@ export default function MapComponent({
             .filter(f => f.get("isSearchPolygon") || f.get("type") === "searchMarker")
             .forEach(f => vectorSourceRef.current.removeFeature(f))
         
+        let feature = null
+        
         if (location.polygon) {
             const format = new GeoJSON()
     
-            const feature = format.readFeature(
+            feature = format.readFeature(
                 {
                     type: "Feature",
                     geometry: location.polygon,
@@ -403,14 +432,35 @@ export default function MapComponent({
 
         vectorSourceRef.current.addFeature(marker)
 
+        const view = mapRef.current.getView()
+
+        if (location.source === "userClick") {
+            return
+        }
+
+        if (feature && shouldFitByPolygon(location)) {
+            const geom = feature.getGeometry?.()
+
+            if (geom) {
+                view.fit(geom, {
+                    duration: 900,
+                    padding: [40, 40, 40, 40],
+                    maxZoom: 15
+                })
+
+                return
+            }
+        }
+
         const coords = fromLonLat([location.lon, location.lat])
         const zoom = getZoomByLocation(location)
 
-        mapRef.current.getView().animate({
+        view.animate({
             center: coords,
-            zoom: zoom,
+            zoom,
             duration: 1000
         })
+
     }, [location])
 
     useEffect(() => { // Построение маршрута (точки)

@@ -35,7 +35,8 @@ export default function Search({
             class: item.class,
             addresstype: item.addresstype,
             display_name: item.display_name,
-            polygon: item.geojson || null
+            polygon: item.geojson || null,
+            source: "search"
         })
     }
 
