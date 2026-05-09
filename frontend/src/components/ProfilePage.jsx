@@ -13,6 +13,8 @@ export default function ProfilePage({
 }) {
   const { user } = useAuth()
   const [routes, setRoutes] = useState([])
+  const [reviews, setReviews] = useState([])
+  const [activeTab, setActiveTab] = useState("routes")
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
 
@@ -33,24 +35,36 @@ export default function ProfilePage({
   }
 
   useEffect(() => {
-    async function loadRoutes() {
+    async function loadProfileData() {
       try {
-        const res = await fetch("http://localhost:4000/api/routes/list", {
-          credentials: "include",
-        });
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok) {
-          setError(data.error || "Не удалось загрузить маршруты");
+        const [routesRes, reviewsRes] = await Promise.all([
+          fetch("http://localhost:4000/api/routes/list", { credentials: "include" }),
+          fetch("http://localhost:4000/api/reviews/my", { credentials: "include" }),
+        ])
+
+        const routesData = await routesRes.json().catch(() => ({}))
+        const reviewsData = await reviewsRes.json().catch(() => ({}))
+
+        if (!routesRes.ok) {
+          setError(routesData.error || "Не удалось загрузить маршруты");
           return;
         }
-        setRoutes(data.routes || []);
+
+        if (!reviewsRes.ok) {
+          setError(reviewsData.error || "Не удалось загрузить отзывы");
+          return;
+        }
+
+        setRoutes(routesData.routes || []);
+        setReviews(reviewsData.reviews || []);
       } catch (e) {
-        setError("Ошибка сети при загрузке маршрутов");
+        setError("Ошибка сети при загрузке данных профиля");
       } finally {
         setLoading(false);
       }
     }
-    if (user) loadRoutes();
+
+    if (user) loadProfileData();
   }, [user]);
 
   return (
@@ -77,64 +91,160 @@ export default function ProfilePage({
       </div>
 
       <div className={styles.section}>
-        <h3>Сохранённые маршруты</h3>
+        <div className={styles.tabsRow}>
+          <button
+            type="button"
+            className={`${styles.tabBtn} ${activeTab === "routes" ? styles.tabBtnActive : ""}`}
+            onClick={() => setActiveTab("routes")}
+          >
+            Маршруты
+          </button>
+          <button
+            type="button"
+            className={`${styles.tabBtn} ${activeTab === "reviews" ? styles.tabBtnActive : ""}`}
+            onClick={() => setActiveTab("reviews")}
+          >
+            Отзывы
+          </button>
+        </div>
 
-        {loading && <div>Загрузка маршрутов...</div>}
+        {loading && <div>Загрузка...</div>}
         {error && <div className={styles.error}>{error}</div>}
 
-        {!loading && !error && routes.length === 0 && (
-          <div>У вас пока нет сохранённых маршрутов</div>
+        {activeTab === "routes" && (
+          <>
+            {!loading && !error && routes.length === 0 && (
+              <div>У вас пока нет сохранённых маршрутов</div>
+            )}
+
+            {!loading && !error && routes.length > 0 && (
+              <div className={styles.routesList}>
+                {routes.map((route) => (
+                  <div
+                    key={route.id}
+                    className={styles.routeCard}
+                  >
+                    <div className={styles.routeTitle}>
+                      <div className={styles.routeName} title={route.name}>{route.name}</div>
+                      <div className={styles.routeInfoModeIcon}>
+                        <img
+                          className={styles.routeInfoModeImg}
+                          src={getTransportIcon(route.transport_mode)}
+                          alt=""
+                        />
+                      </div>
+                    </div>
+                    <div className={styles.routeDate}>
+                      {new Date(route.created_at).toLocaleString()}
+                    </div>
+                    <div className={styles.routeActions}>
+                      <button
+                        type="button"
+                        className={styles.btnPrimary}
+                        onClick={() => {
+                          onSelectRouteForEdit?.(route.id);
+                        }}
+                      >
+                        Редактировать
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.btnSecondary}
+                        onClick={async () => {
+                          const confirmDelete = window.confirm(
+                            `Удалить маршрут "${route.name}"?`
+                          );
+                          if (!confirmDelete) return;
+                          await onDeleteRoute?.(route.id);
+                          setRoutes((prev) => prev.filter((r) => r.id !== route.id));
+                        }}
+                      >
+                        Удалить
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
         )}
 
-        {!loading && !error && routes.length > 0 && (
-          <div className={styles.routesList}>
-            {routes.map((route) => (
-              <div
-                key={route.id}
-                className={styles.routeCard}
-              >
-                <div className={styles.routeTitle}>
-                  <div className={styles.routeName} title={route.name}>{route.name}</div>
-                  <div className={styles.routeInfoModeIcon}>
-                    <img
-                      className={styles.routeInfoModeImg}
-                      src={getTransportIcon(route.transport_mode)}
-                      alt=""
-                    />
+        {activeTab === "reviews" && (
+          <>
+            {!loading && !error && reviews.length === 0 && (
+              <div>У вас пока нет сохранённых отзывов</div>
+            )}
+
+            {!loading && !error && reviews.length > 0 && (
+              <div className={styles.routesList}>
+                {reviews.map((review) => (
+                  <div key={review.id} className={styles.routeCard}>
+                    <div className={styles.routeTitle}>
+                      <div className={styles.routeName}>Отзыв</div>
+                    </div>
+                    <div className={styles.routeDate}>
+                      {new Date(review.created_at).toLocaleString()} • {Number(review.lat).toFixed(5)}, {Number(review.lon).toFixed(5)}
+                    </div>
+                    <div className={styles.reviewText}>{review.text}</div>
+                    <div className={styles.routeActions}>
+                      <button
+                        type="button"
+                        className={styles.btnPrimary}
+                        onClick={async () => {
+                          const nextText = window.prompt("Измените текст отзыва:", review.text)
+                          if (nextText === null) return
+                          if (!nextText.trim()) {
+                            alert("Текст отзыва не может быть пустым")
+                            return
+                          }
+
+                          const res = await fetch(`http://localhost:4000/api/reviews/${review.id}`, {
+                            method: "PUT",
+                            headers: { "Content-Type": "application/json" },
+                            credentials: "include",
+                            body: JSON.stringify({ text: nextText.trim() }),
+                          })
+                          const data = await res.json().catch(() => ({}))
+                          if (!res.ok) {
+                            alert(data.error || "Не удалось обновить отзыв")
+                            return
+                          }
+
+                          setReviews((prev) => prev.map((r) => (
+                            r.id === review.id ? data.review : r
+                          )))
+                        }}
+                      >
+                        Редактировать
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.btnSecondary}
+                        onClick={async () => {
+                          const confirmDelete = window.confirm("Удалить отзыв?")
+                          if (!confirmDelete) return
+
+                          const res = await fetch(`http://localhost:4000/api/reviews/${review.id}`, {
+                            method: "DELETE",
+                            credentials: "include",
+                          })
+                          if (!res.ok && res.status !== 204) {
+                            const data = await res.json().catch(() => ({}))
+                            alert(data.error || "Не удалось удалить отзыв")
+                            return
+                          }
+
+                          setReviews((prev) => prev.filter((r) => r.id !== review.id))
+                        }}
+                      >
+                        Удалить
+                      </button>
+                    </div>
                   </div>
-                </div>
-                <div className={styles.routeDate}>
-                  {new Date(route.created_at).toLocaleString()}
-                </div>
-                <div className={styles.routeActions}>
-                  <button
-                    type="button"
-                    className={styles.btnPrimary}
-                    onClick={() => {
-                      onSelectRouteForEdit?.(route.id);
-                    }}
-                  >
-                    Редактировать
-                  </button>
-                  <button
-                    type="button"
-                    className={styles.btnSecondary}
-                    onClick={async () => {
-                      const confirmDelete = window.confirm(
-                        `Удалить маршрут "${route.name}"?`
-                      );
-                      if (!confirmDelete) return;
-                      await onDeleteRoute?.(route.id);
-                      // локально убрать из списка
-                      setRoutes((prev) => prev.filter((r) => r.id !== route.id));
-                    }}
-                  >
-                    Удалить
-                  </button>
-                </div>
+                ))}
               </div>
-            ))}
-          </div>
+            )}
+          </>
         )}
       </div>
     </div>

@@ -4,7 +4,7 @@ import View from "ol/View"
 import TileLayer from "ol/layer/Tile"
 import OSM from "ol/source/OSM"
 import VectorLayer from "ol/layer/Vector"
-import VectorSource, { VectorSourceEvent } from "ol/source/Vector"
+import VectorSource from "ol/source/Vector"
 import Feature from "ol/Feature"
 import Point from "ol/geom/Point"
 import { Style, Icon, Stroke, Fill } from "ol/style"
@@ -38,8 +38,7 @@ export default function MapComponent({
     setRouteGeometry,
     setCurrentRouteName,
     setRouteMode,
-    selectedEvent,
-    setSelectedEvent
+    selectedEvent
 }) {
     const mapRef = useRef()
     const vectorSourceRef = useRef(new VectorSource())
@@ -49,6 +48,11 @@ export default function MapComponent({
     const [routeDialogPos, setRouteDialogPos] = useState(null)
     const [activeEvent, setActiveEvent] = useState(null)
     const [eventDialogPos, setEventDialogPos] = useState(null)
+    const [reviewDraft, setReviewDraft] = useState("")
+    const [nearbyReviews, setNearbyReviews] = useState([])
+    const [reviewsLoading, setReviewsLoading] = useState(false)
+    const [activeReview, setActiveReview] = useState(null)
+    const [isReviewPanelOpen, setIsReviewPanelOpen] = useState(false)
 
     const LARGE_PLACE_TYPES = new Set([
         "country",
@@ -140,6 +144,99 @@ export default function MapComponent({
 
         return feature
     }
+
+    function createReviewMarkerFeature(review) {
+        const svg = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="30" height="66">
+                <circle cx="15" cy="15" r="10" fill="#2B6CB0"/>
+                <path d="M 7 22 Q 13 28 15 34 Q 17 28 23 22" fill="#2B6CB0"/>
+                <circle cx="15" cy="15" r="4" fill="white"/>
+            </svg>
+        `
+
+        const feature = new Feature({
+            geometry: new Point(fromLonLat([Number(review.lon), Number(review.lat)])),
+        })
+
+        feature.set("type", "reviewMarker")
+        feature.set("reviewData", review)
+        feature.setStyle(new Style({
+            image: new Icon({
+                src: "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg),
+                scale: 1,
+            }),
+        }))
+
+        return feature
+    }
+
+    async function loadNearbyReviews(lat, lon, radius = 100) {
+        if (!Number.isFinite(Number(lat)) || !Number.isFinite(Number(lon))) return
+
+        setReviewsLoading(true)
+        try {
+            const res = await fetch(
+                `http://localhost:4000/api/reviews/nearby?lat=${lat}&lon=${lon}&radius=${radius}`,
+                { credentials: "include" }
+            )
+            const data = await res.json().catch(() => ({}))
+
+            if (!res.ok) {
+                console.error("Nearby reviews error:", data.error || res.status)
+                setNearbyReviews([])
+                return
+            }
+
+            setNearbyReviews(data.reviews || [])
+        } catch (error) {
+            console.error("Nearby reviews fetch error:", error)
+            setNearbyReviews([])
+        } finally {
+            setReviewsLoading(false)
+        }
+    }
+
+    async function handleSaveReviewAtMarker() {
+        const lat = Number(location?.lat)
+        const lon = Number(location?.lon)
+        const text = reviewDraft.trim()
+
+        if (!isAuthenticated) {
+            alert("Чтобы сохранить отзыв, войдите в аккаунт")
+            return
+        }
+
+        if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+            alert("Сначала поставьте метку на карте")
+            return
+        }
+
+        if (!text) {
+            alert("Введите текст отзыва")
+            return
+        }
+
+        const res = await fetch("http://localhost:4000/api/reviews", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ lat, lon, text }),
+        })
+        const data = await res.json().catch(() => ({}))
+        if (!res.ok) {
+            alert(data.error || "Не удалось сохранить отзыв")
+            return
+        }
+
+        setReviewDraft("")
+        await loadNearbyReviews(lat, lon)
+    }
+
+    function formatReviewDistance(distanceMeters) {
+        const d = Number(distanceMeters) || 0
+        if (d < 1000) return `${Math.round(d)} м`
+        return `${(d / 1000).toFixed(1)} км`
+    }
     
     async function getWeather(lat, lon, setWeather, setForecast) {
         try {
@@ -213,7 +310,7 @@ export default function MapComponent({
             console.error("loadRouteAndShowOnMap error", e)
             alert("Ошибка при загрузке маршрута")
         }
-      }
+    }
       
     async function deleteRouteById(routeId) {
         const res = await fetch(`http://localhost:4000/api/routes/${routeId}`, {
@@ -302,6 +399,12 @@ export default function MapComponent({
                 return
             }
 
+            if (featureAtPixel?.get("type") === "reviewMarker") {
+                const reviewData = featureAtPixel.get("reviewData")
+                setActiveReview(reviewData)
+                return
+            }
+
             // Проверка клика по пользовательскому маркеру
             if (featureAtPixel?.get("type") === "searchMarker") {
                 vectorSourceRef.current.removeFeature(featureAtPixel)
@@ -309,6 +412,10 @@ export default function MapComponent({
                 setLocation(null)
                 setWeather(null)
                 setForecast(null)
+                setNearbyReviews([])
+                setActiveReview(null)
+                setReviewDraft("")
+                setIsReviewPanelOpen(false)
 
                 return
             }
@@ -381,6 +488,8 @@ export default function MapComponent({
 
             // Запрос к OpenWeather
             getWeather(lonlat[1], lonlat[0], setWeather, setForecast)
+            loadNearbyReviews(lonlat[1], lonlat[0])
+            setActiveReview(null)
         })
 
         return () => map.setTarget(null)
@@ -463,6 +572,20 @@ export default function MapComponent({
 
     }, [location])
 
+    useEffect(() => { // Маркеры-отзывы
+        if (!mapRef.current) return
+
+        const features = vectorSourceRef.current.getFeatures()
+        features
+            .filter((f) => f.get("type") === "reviewMarker")
+            .forEach((f) => vectorSourceRef.current.removeFeature(f))
+
+        nearbyReviews.forEach((review) => {
+            const marker = createReviewMarkerFeature(review)
+            vectorSourceRef.current.addFeature(marker)
+        })
+    }, [nearbyReviews])
+
     useEffect(() => { // Построение маршрута (точки)
         if (!mapRef) return
 
@@ -494,6 +617,14 @@ export default function MapComponent({
             vectorSourceRef.current.addFeature(marker)
         })
     }, [routePoints])
+
+
+    // ???????
+//     nearbyReviews.forEach((review) => {
+//         const marker = createReviewMarkerFeature(review)
+//         vectorSourceRef.current.addFeature(marker)
+//     })
+// }, [routePoints, nearbyReviews])
 
     useEffect(() => { // Построение маршрута (путь)
         if (!mapRef.current || !routeGeometry || routeGeometry.length === 0) return
@@ -591,7 +722,9 @@ export default function MapComponent({
         
         update()
         return () => {
-            mapRef.current.un("postrender", handler)
+            if (mapRef.current) {
+                mapRef.current.un("postrender", handler)
+            }
             if (rafId) cancelAnimationFrame(rafId)
         }
     }, [routeGeometry, routePoints, routeSummary])
@@ -703,6 +836,7 @@ export default function MapComponent({
                 className={styles.mapCanvas}
             />
 
+            {/* Итоговая информация о маршруте */}
             {routeSummary && routeDialogPos && (
                 <div
                     className={styles.routeInfoDialog}
@@ -732,6 +866,7 @@ export default function MapComponent({
                 </div>
             )}
 
+            {/* Информация о событии */}
             {activeEvent && eventDialogPos && (
                 <div
                     className={`${styles.eventDialog} ${
@@ -761,6 +896,74 @@ export default function MapComponent({
                             Сайт события
                         </a>
                     )}
+                </div>
+            )}
+
+            {/* Активный отзыв */}
+            {activeReview && (
+                <div className={styles.reviewDialog}>
+                    <button className={styles.reviewDialogClose} onClick={() => setActiveReview(null)}>×</button>
+                    <div className={styles.reviewDialogAuthor}>
+                        {activeReview.username || "Пользователь"}
+                    </div>
+                    <div className={styles.reviewDialogText}>{activeReview.text}</div>
+                    <div className={styles.reviewDialogMeta}>
+                        {formatReviewDistance(activeReview.distance_m)} • {new Date(activeReview.created_at).toLocaleString()}
+                    </div>
+                </div>
+            )}
+
+            {/* Окно добавления нового отзыва */}
+            {location?.type === "searchMarker" && location?.source === "userClick" && (
+                <div
+                    className={`${styles.reviewPanelDrawer} ${isReviewPanelOpen ? styles.reviewPanelDrawerOpen : ""}`}
+                >
+                    <button
+                        type="button"
+                        className={styles.reviewPanelToggle}
+                        onClick={() => setIsReviewPanelOpen((prev) => !prev)}
+                        aria-label={isReviewPanelOpen ? "Свернуть панель отзывов" : "Развернуть панель отзывов"}
+                        title={isReviewPanelOpen ? "Свернуть" : "Развернуть"}
+                    >
+                        {isReviewPanelOpen ? "<" : ">"}
+                    </button>
+
+                    <div className={styles.reviewPanel}>
+                        <div className={styles.reviewPanelTitle}>Отзыв по вашей метке</div>
+                        <textarea
+                            className={styles.reviewInput}
+                            value={reviewDraft}
+                            onChange={(e) => setReviewDraft(e.target.value)}
+                            placeholder={isAuthenticated ? "Напишите отзыв об этом месте..." : "Войдите в аккаунт, чтобы оставить отзыв"}
+                            disabled={!isAuthenticated}
+                        />
+                        <button
+                            type="button"
+                            className={styles.reviewSaveBtn}
+                            onClick={handleSaveReviewAtMarker}
+                            disabled={!isAuthenticated || !reviewDraft.trim()}
+                        >
+                            Сохранить отзыв
+                        </button>
+                        <div className={styles.reviewNearbyTitle}>
+                            Отзывы рядом ({nearbyReviews.length})
+                        </div>
+                        {reviewsLoading && <div className={styles.reviewNearbyHint}>Загрузка...</div>}
+                        {!reviewsLoading && nearbyReviews.length === 0 && (
+                            <div className={styles.reviewNearbyHint}>Рядом пока нет отзывов</div>
+                        )}
+                        {!reviewsLoading && nearbyReviews.length > 0 && (
+                            <div className={styles.reviewNearbyList}>
+                                {nearbyReviews.slice(0, 5).map((review) => (
+                                    <div key={review.id} className={styles.reviewNearbyItem}>
+                                        <div className={styles.reviewNearbyUser}>{review.username || "Пользователь"}</div>
+                                        <div className={styles.reviewNearbyText}>{review.text}</div>
+                                        <div className={styles.reviewNearbyMeta}>{formatReviewDistance(review.distance_m)}</div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
                 </div>
             )}
 

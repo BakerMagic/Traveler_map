@@ -4,9 +4,10 @@ import dotenv from "dotenv"
 import eventsRouter from "./routes/events.js"
 import routesRouter from "./routes/routes.js"
 import weatherRouter from "./routes/weather.js"
-import { testDbConnection } from "./db.js";
-import authRouter from "./routes/auth.js";
-import cookieParser from "cookie-parser";
+import { testDbConnection } from "./db.js"
+import authRouter from "./routes/auth.js"
+import cookieParser from "cookie-parser"
+import reviewsRouter from "./routes/reviews.js"
 
 testDbConnection().catch((error) => {
     console.error("Failed to connect to DB:", error);
@@ -30,7 +31,8 @@ app.use(express.json())
 app.use("/api/events", eventsRouter)
 app.use("/api/routes", routesRouter)
 app.use("/api/weather", weatherRouter)
-app.use("/api/auth", authRouter);
+app.use("/api/auth", authRouter)
+app.use("/api/reviews", reviewsRouter)
 
 app.get("/api/health", (req, res) => {
     res.json({ status: "ok" })

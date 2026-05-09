@@ -57,7 +57,6 @@ function App() {
         setCurrentRouteName={setCurrentRouteName}
         setRouteMode={setRouteMode}
         selectedEvent={selectedEvent}
-        setSelectedEvent={setSelectedEvent}
       />
     </div>
   )
