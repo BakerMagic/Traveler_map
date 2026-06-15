@@ -38,8 +38,8 @@ export default function ProfilePage({
     async function loadProfileData() {
       try {
         const [routesRes, reviewsRes] = await Promise.all([
-          fetch("http://localhost:4000/api/routes/list", { credentials: "include" }),
-          fetch("http://localhost:4000/api/reviews/my", { credentials: "include" }),
+          fetch("https://traveler-map.onrender.com/api/routes/list", { credentials: "include" }),
+          fetch("https://traveler-map.onrender.com/api/reviews/my", { credentials: "include" }),
         ])
 
         const routesData = await routesRes.json().catch(() => ({}))
@@ -198,7 +198,7 @@ export default function ProfilePage({
                             return
                           }
 
-                          const res = await fetch(`http://localhost:4000/api/reviews/${review.id}`, {
+                          const res = await fetch(`https://traveler-map.onrender.com/api/reviews/${review.id}`, {
                             method: "PUT",
                             headers: { "Content-Type": "application/json" },
                             credentials: "include",
@@ -224,7 +224,7 @@ export default function ProfilePage({
                           const confirmDelete = window.confirm("Удалить отзыв?")
                           if (!confirmDelete) return
 
-                          const res = await fetch(`http://localhost:4000/api/reviews/${review.id}`, {
+                          const res = await fetch(`https://traveler-map.onrender.com/api/reviews/${review.id}`, {
                             method: "DELETE",
                             credentials: "include",
                           })

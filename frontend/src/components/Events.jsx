@@ -41,7 +41,7 @@ export default function Events({
 
                 // Поиск событий вокруг выбранной точки (Глобально)
                 const response = await fetch(
-                    `http://localhost:4000/api/events?lat=${location.lat}&lon=${location.lon}`
+                    `https://traveler-map.onrender.com/api/events?lat=${location.lat}&lon=${location.lon}`
                 )
                 if (!response.ok) {
                     throw new Error(`HTTP ${response.status}`)

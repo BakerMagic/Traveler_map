@@ -176,7 +176,7 @@ export default function MapComponent({
         setReviewsLoading(true)
         try {
             const res = await fetch(
-                `http://localhost:4000/api/reviews/nearby?lat=${lat}&lon=${lon}&radius=${radius}`,
+                `https://traveler-map.onrender.com/api/reviews/nearby?lat=${lat}&lon=${lon}&radius=${radius}`,
                 { credentials: "include" }
             )
             const data = await res.json().catch(() => ({}))
@@ -216,7 +216,7 @@ export default function MapComponent({
             return
         }
 
-        const res = await fetch("http://localhost:4000/api/reviews", {
+        const res = await fetch("https://traveler-map.onrender.com/api/reviews", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             credentials: "include",
@@ -241,9 +241,10 @@ export default function MapComponent({
     async function getWeather(lat, lon, setWeather, setForecast) {
         try {
             const [currentResponse, forecastResponse] = await Promise.all([
-                fetch(`http://localhost:4000/api/weather/current?lat=${lat}&lon=${lon}`),
-                fetch(`http://localhost:4000/api/weather/forecast?lat=${lat}&lon=${lon}`)
+                fetch(`https://traveler-map.onrender.com/api/weather/current?lat=${lat}&lon=${lon}`),
+                fetch(`https://traveler-map.onrender.com/api/weather/forecast?lat=${lat}&lon=${lon}`)
             ])
+            console.log(import.meta.env.VITE_API_URL)
     
             if (currentResponse.ok) {
                 const { weather } = await currentResponse.json()
@@ -265,7 +266,7 @@ export default function MapComponent({
     
     async function loadRouteAndShowOnMap(routeId) {
         try {
-            const res = await fetch(`http://localhost:4000/api/routes/${routeId}`, {
+            const res = await fetch(`https://traveler-map.onrender.com/api/routes/${routeId}`, {
                 credentials: "include",
             })
             const data = await res.json().catch(() => ({}))
@@ -284,7 +285,7 @@ export default function MapComponent({
             setCurrentRouteName(route.name || "")
         
             // Строим путь по этим точкам
-            const buildRes = await fetch("http://localhost:4000/api/routes", {
+            const buildRes = await fetch("https://traveler-map.onrender.com/api/routes", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -313,7 +314,7 @@ export default function MapComponent({
     }
       
     async function deleteRouteById(routeId) {
-        const res = await fetch(`http://localhost:4000/api/routes/${routeId}`, {
+        const res = await fetch(`https://traveler-map.onrender.com/api/routes/${routeId}`, {
             method: "DELETE",
             credentials: "include",
         })
@@ -617,14 +618,6 @@ export default function MapComponent({
             vectorSourceRef.current.addFeature(marker)
         })
     }, [routePoints])
-
-
-    // ???????
-//     nearbyReviews.forEach((review) => {
-//         const marker = createReviewMarkerFeature(review)
-//         vectorSourceRef.current.addFeature(marker)
-//     })
-// }, [routePoints, nearbyReviews])
 
     useEffect(() => { // Построение маршрута (путь)
         if (!mapRef.current || !routeGeometry || routeGeometry.length === 0) return

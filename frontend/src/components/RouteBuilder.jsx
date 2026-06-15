@@ -42,7 +42,7 @@ export default function RouteBuilder({
             return
         }
 
-        const response = await fetch("http://localhost:4000/api/routes", {
+        const response = await fetch("https://traveler-map.onrender.com/api/routes", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ 
@@ -84,7 +84,7 @@ export default function RouteBuilder({
         const name = window.prompt("Название нового маршрута:", defaultName);
         if (!name) return;
     
-        const res = await fetch("http://localhost:4000/api/routes/save", {
+        const res = await fetch("https://traveler-map.onrender.com/api/routes/save", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             credentials: "include", // важно для secure cookie
@@ -134,7 +134,7 @@ export default function RouteBuilder({
         const finalName = nameInput || currentRouteName || "Без имени";
       
         const res = await fetch(
-            `http://localhost:4000/api/routes/${currentRouteId}`,
+            `https://traveler-map.onrender.com/api/routes/${currentRouteId}`,
             {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
@@ -202,7 +202,7 @@ export default function RouteBuilder({
                 );
             case "truck":
                 return (
-                    <img className={styles.SVGIcon} src={truckSVG} style={{opacity: "0.45", cursor: "not-allowed", pointerEvents: "none"}}/>
+                    <img className={styles.SVGIcon} src={truckSVG}/>
                 );
             case "bike":
                 return (
@@ -230,10 +230,6 @@ export default function RouteBuilder({
                             aria-pressed={routeMode === key}
                             className={`${styles.profileModeBtn} ${routeMode === key ? styles.profileModeBtnActive : ""}`}
                             onClick={() => setRouteMode(key)}
-
-                            // временно отключил truck, так как на сайте ORS технические неполадки
-                            disabled={key === 'truck'}
-                            style={key === 'truck' ? {cursor: "not-allowed"} : {}}
                         >
                             <span className={styles.profileModeIcon}>
                                 <ModeIcon mode={key} />
